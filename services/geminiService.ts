@@ -1,11 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
-// Inizializzazione sicura: usiamo una funzione per creare l'istanza quando serve
 const getAI = () => {
+  // In Vercel, process.env.API_KEY è iniettato da vite.config.ts
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    throw new Error("API_KEY non configurata. Aggiungila nelle Environment Variables di Vercel.");
+    throw new Error("API_KEY mancante. Aggiungila nelle Environment Variables di Vercel.");
   }
   return new GoogleGenAI({ apiKey });
 };
@@ -28,20 +28,20 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     contents: {
       parts: [
         { 
-          text: `Agisci come uno YouTuber Senior con 20 anni di esperienza e 10M+ di iscritti. 
-                 Analizza tecnicamente questo video per la piattaforma ${platform}.
-                 Lingua di output: ${lang}.
-                 Sii brutale ma costruttivo.
-                 Restituisci ESCLUSIVAMENTE un JSON con questa struttura:
+          text: `Agisci come un Master YouTuber con 20 anni di esperienza. 
+                 Analizza tecnicamente questo video per ${platform} in lingua ${lang}.
+                 Sii brutale ma strategico. Analizza gancio, montaggio e potenziale virale.
+                 Restituisci SOLO un oggetto JSON valido.
+                 Struttura JSON:
                  {
-                   "score": "numero da 0 a 100",
-                   "title": "Titolo Strategico",
-                   "analysis": "Analisi tecnica di ritenzione e gancio",
-                   "caption": "Copy completo di spazi e formattazione",
+                   "score": "0-100",
+                   "title": "Titolo Master",
+                   "analysis": "Analisi critica approfondita",
+                   "caption": "Copy ottimizzato per algoritmi",
                    "hashtags": ["tag1", "tag2"],
-                   "visualData": "Descrizione dettagliata per generare uno script di rifacimento",
+                   "visualData": "Dettagli tecnici per rifacimento professionale",
                    "platformSuggestion": "Suggerimento posizionamento",
-                   "ideaDuration": "Durata ideale consigliata"
+                   "ideaDuration": "Durata consigliata"
                  }` 
         },
         { 
@@ -57,7 +57,8 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     }
   });
   
-  return JSON.parse(response.text || "{}");
+  const text = response.text || "{}";
+  return JSON.parse(text);
 }
 
 export async function generateScriptOnly(visualData: string, lang: Language): Promise<Scene[]> {
@@ -67,9 +68,9 @@ export async function generateScriptOnly(visualData: string, lang: Language): Pr
     contents: { 
       parts: [
         { 
-          text: `In base a questa analisi video: "${visualData}", crea uno script di produzione 8K professionale.
-                 Lingua: ${lang}.
-                 Restituisci un array JSON di oggetti con chiavi: scene (number), description (descrizione visuale), audioSFX (audio e sound design), duration (es: "0:02").` 
+          text: `Basandoti su questa analisi: "${visualData}", crea uno script 8K cinematografico. 
+                 Lingua: ${lang}. 
+                 Restituisci un array JSON di scene con: scene (numero), description, audioSFX, duration.` 
         }
       ] 
     },
@@ -78,5 +79,6 @@ export async function generateScriptOnly(visualData: string, lang: Language): Pr
     }
   });
   
-  return JSON.parse(response.text || "[]");
+  const text = response.text || "[]";
+  return JSON.parse(text);
 }
