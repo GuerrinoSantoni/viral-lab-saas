@@ -7,7 +7,7 @@ import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
-const MAX_FILE_SIZE_MB = 10; // Ridotto a 10MB per garantire che l'upload Base64 non fallisca
+const MAX_FILE_SIZE_MB = 20; // Limite rigoroso a 20MB per stabilità garantita
 
 export default function App() {
   const [lang] = useState<Language>('IT');
@@ -25,11 +25,11 @@ export default function App() {
     if (!platform) return alert("Seleziona una piattaforma!");
     
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`File troppo grande. Per l'analisi via browser il limite di sicurezza è ${MAX_FILE_SIZE_MB}MB. Comprimi il video o caricalo più breve.`);
+      return alert(`File troppo pesante. Come richiesto, il limite per l'audit istantaneo è ${MAX_FILE_SIZE_MB}MB.`);
     }
 
     setLoading(true);
-    setStatus("Analisi Master in corso...");
+    setStatus("Analisi Master in corso (Flash Mode)...");
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
@@ -37,14 +37,14 @@ export default function App() {
       setCredits(prev => prev - 1);
     } catch (e: any) {
       console.error("ERROR:", e);
-      alert(`Il server non ha accettato il video. 
+      alert(`ATTENZIONE: Il processo ha riscontrato un ostacolo tecnico.
 
-CONSIGLIO TECNICO:
-1. Usa un video più corto (max 30-60 secondi).
-2. Assicurati che sia < 10MB.
-3. Formato consigliato: MP4 standard.
+VERIFICA QUESTI PUNTI:
+1. Assicurati che il video sia un MP4/MOV standard.
+2. Se il file è esattamente 20MB, la conversione Base64 potrebbe superare i limiti API. Prova con un file leggermente più piccolo (15MB).
+3. Riprova: a volte i server Google hanno picchi di latenza.
 
-L'API Google ha limiti stretti per gli upload diretti da browser.`);
+Il modello Gemini 3 Flash è attivo.`);
     } finally {
       setLoading(false);
       setStatus("");
@@ -109,9 +109,9 @@ L'API Google ha limiti stretti per gli upload diretti da browser.`);
               {mode === 'VIDEO' ? (
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all">
-                    <div className="text-6xl">📽️</div>
+                    <div className="text-6xl">🚀</div>
                     <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video (Max {MAX_FILE_SIZE_MB}MB)</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Audit Senior Istantaneo • MP4/MOV</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Ottimizzato con Gemini 3 Flash • Risultati Immediati</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -134,14 +134,14 @@ L'API Google ha limiti stretti per gli upload diretti da browser.`);
           <div className="py-24 flex flex-col items-center gap-10 text-center w-full animate-fadeIn max-w-xl">
             <div className="relative">
                <div className="w-32 h-32 border-[2px] border-[#a02a11]/20 border-t-[#a02a11] rounded-full animate-spin"></div>
-               <div className="absolute inset-0 flex items-center justify-center text-xs font-black uppercase italic text-[#a02a11] animate-pulse">Master</div>
+               <div className="absolute inset-0 flex items-center justify-center text-xs font-black uppercase italic text-[#a02a11] animate-pulse">Flash</div>
             </div>
             <div className="space-y-4">
               <p className="text-3xl font-black uppercase italic tracking-tighter text-white">
                 {status}
               </p>
               <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] font-black animate-pulse">
-                Analisi Senior in corso • Non chiudere la scheda
+                Elaborazione Ultra-Veloce con Gemini 3 Flash
               </p>
             </div>
           </div>
