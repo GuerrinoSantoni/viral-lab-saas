@@ -22,28 +22,30 @@ export default function App() {
   const [credits, setCredits] = useState(10);
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Seleziona prima una piattaforma!");
+    if (!platform) return alert("Seleziona una piattaforma!");
     
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`File troppo pesante per l'upload diretto. Usa un video < ${MAX_FILE_SIZE_MB}MB.`);
+      return alert(`File troppo pesante. Il limite stabile è ${MAX_FILE_SIZE_MB}MB.`);
     }
 
     setLoading(true);
-    setStatus("Compressione e Upload in corso...");
+    setStatus("Avvio caricamento sicuro...");
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
       setResult(res);
       setCredits(prev => prev - 1);
     } catch (e: any) {
-      console.error("ANALYSIS ERROR:", e);
+      console.error("STABILITY ERROR:", e);
       alert(`ERRORE DI TRASMISSIONE.
-Il file da ${Math.round(file.size / 1024 / 1024)}MB potrebbe aver causato un timeout.
+Nonostante l'ottimizzazione, il server Google ha interrotto la connessione.
 
-CONSIGLIO:
-1. Riprova (spesso è un problema di rete temporaneo).
-2. Se persiste, usa un video sotto i 10MB per maggiore stabilità.
-3. Verifica che la tua connessione in upload sia stabile.`);
+CAUSE POSSIBILI:
+1. File troppo lungo (anche se leggero).
+2. Connessione internet instabile in upload.
+3. Formato video non supportato correttamente.
+
+CONSIGLIO: Se succede ancora con un file da 8MB, prova a convertirlo in MP4 a risoluzione più bassa (720p).`);
     } finally {
       setLoading(false);
       setStatus("");
@@ -55,7 +57,7 @@ CONSIGLIO:
     if (!ideaText.trim()) return alert("Scrivi la tua idea!");
     
     setLoading(true);
-    setStatus("Generazione strategia...");
+    setStatus("Generazione strategia creativa...");
     try {
       const res = await generateIdea(ideaText, platform, lang);
       setResult(res);
@@ -108,9 +110,9 @@ CONSIGLIO:
               {mode === 'VIDEO' ? (
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all">
-                    <div className="text-6xl">🚀</div>
-                    <span className="text-xl font-black uppercase tracking-tighter italic">Analisi Video (Max 20MB)</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Ottimizzato con Gemini 3 Flash</span>
+                    <div className="text-6xl">💎</div>
+                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica per Audit Senior (20MB)</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic text-center">Protocollo stabilità a due fasi attivo</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -119,10 +121,10 @@ CONSIGLIO:
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Descrivi la tua idea..."
+                    placeholder="Descrivi la tua idea strategica..."
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
-                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all">Genera Strategia</button>
+                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all">Genera Piano Master</button>
                 </div>
               )}
             </div>
@@ -133,14 +135,14 @@ CONSIGLIO:
           <div className="py-24 flex flex-col items-center gap-10 text-center w-full animate-fadeIn max-w-xl">
             <div className="relative">
                <div className="w-32 h-32 border-[2px] border-[#a02a11]/20 border-t-[#a02a11] rounded-full animate-spin"></div>
-               <div className="absolute inset-0 flex items-center justify-center text-xs font-black uppercase italic text-[#a02a11] animate-pulse">Flash</div>
+               <div className="absolute inset-0 flex items-center justify-center text-xs font-black uppercase italic text-[#a02a11] animate-pulse text-[8px]">Processing</div>
             </div>
             <div className="space-y-4">
               <p className="text-3xl font-black uppercase italic tracking-tighter text-white">
                 {status}
               </p>
-              <p className="text-[10px] text-gray-400 uppercase tracking-[0.4em] font-black animate-pulse">
-                Il Master sta elaborando i dati multimodali
+              <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] font-black animate-pulse">
+                Sfruttando la potenza di Gemini 3 Flash
               </p>
             </div>
           </div>
