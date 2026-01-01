@@ -5,11 +5,12 @@ import { generateScriptOnly } from '../services/geminiService';
 
 interface Props {
   result: AnalysisResult;
+  videoFile?: File;
   language: Language;
   onReset: () => void;
 }
 
-export const AnalysisView: React.FC<Props> = ({ result, language, onReset }) => {
+export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onReset }) => {
   const [loadingScript, setLoadingScript] = useState(false);
   const [script, setScript] = useState<Scene[] | null>(null);
   const [copied, setCopied] = useState(false);
@@ -18,7 +19,7 @@ export const AnalysisView: React.FC<Props> = ({ result, language, onReset }) => 
   const loadScript = async () => {
     setLoadingScript(true);
     try {
-      const data = await generateScriptOnly(result.visualData, language);
+      const data = await generateScriptOnly(result.visualData, language, videoFile);
       if (data && data.length > 0) {
         setScript(data);
       } else {
@@ -84,13 +85,13 @@ export const AnalysisView: React.FC<Props> = ({ result, language, onReset }) => 
           <div className="text-center py-20 space-y-10">
             <div className="text-6xl">🎥</div>
             <h3 className="text-4xl font-black uppercase tracking-tighter italic">{t.scriptTitle}</h3>
-            <p className="text-gray-500 text-xs uppercase tracking-widest">Analisi tecnica ultra-dettagliata (Descrizioni 100+ parole)</p>
+            <p className="text-gray-500 text-xs uppercase tracking-widest">Analisi tecnica reale basata sul video caricato</p>
             <button 
               onClick={loadScript} 
               disabled={loadingScript} 
               className="bg-white text-black px-16 py-5 rounded-[20px] font-black uppercase tracking-widest text-xs hover:bg-[#a02a11] hover:text-white transition-all shadow-2xl disabled:opacity-50"
             >
-              {loadingScript ? "GENERAZIONE ANALISI PROFONDA..." : t.scriptBtn}
+              {loadingScript ? "AUDIT VIDEO IN CORSO..." : t.scriptBtn}
             </button>
           </div>
         ) : (
