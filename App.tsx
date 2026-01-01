@@ -35,10 +35,10 @@ export default function App() {
   };
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Seleziona prima una piattaforma.");
+    if (!platform) return alert("Seleziona prima una piattaforma per l'audit.");
     
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return alert(`VIDEO TROPPO PESANTE: Il limite massimo è ${MAX_FILE_SIZE_MB}MB. Per favore, carica un file più piccolo.`);
+      return alert(`FILE ECCEDE I LIMITI: L'audit professionale supporta video fino a ${MAX_FILE_SIZE_MB}MB.`);
     }
 
     if (!checkCredits()) return;
@@ -50,12 +50,12 @@ export default function App() {
       setResult(res);
       if (!ownerMode) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      console.error("AI Error:", e);
-      let errorMsg = "Si è verificato un problema durante l'analisi.";
+      console.error("Master Audit Error:", e);
+      let errorMsg = "L'analisi ha richiesto troppo tempo o è stata interrotta dal server.";
       if (e.message?.includes("500") || e.message?.includes("Internal")) {
-        errorMsg = "ERRORE SERVER: Il video è troppo complesso o pesante per il motore AI in questo momento. Prova con una versione più breve o leggermente più compressa del file.";
+        errorMsg = "ERRORE DI ELABORAZIONE: Il server AI è momentaneamente sovraccarico a causa della complessità del file. Riprova tra pochi istanti per un audit completo.";
       } else if (e.message?.includes("API_KEY")) {
-        errorMsg = "ERRORE: API_KEY non configurata correttamente nel sistema.";
+        errorMsg = "ERRORE CRITICO: API_KEY non valida o mancante.";
       }
       alert(errorMsg);
     } finally {
@@ -64,8 +64,8 @@ export default function App() {
   };
 
   const handleAnalyzePrompt = async () => {
-    if (!platform) return alert("Seleziona prima una piattaforma.");
-    if (!textInput.trim()) return alert("Inserisci un'idea o un argomento.");
+    if (!platform) return alert("Seleziona una piattaforma.");
+    if (!textInput.trim()) return alert("Inserisci un'idea da analizzare.");
     if (!checkCredits()) return;
 
     setLoading(true);
@@ -75,7 +75,7 @@ export default function App() {
       setResult(res);
       if (!ownerMode) setCredits(prev => Math.max(0, prev - 1));
     } catch (e) {
-      alert("Errore durante la generazione della strategia.");
+      alert("Errore nella generazione della strategia AI.");
     } finally {
       setLoading(false);
     }
@@ -90,14 +90,14 @@ export default function App() {
           <div className="w-12 h-12 bg-[#a02a11] rounded-xl flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(160,42,17,0.4)]">SG</div>
           <div className="hidden sm:flex flex-col">
             <span className="font-black text-xs uppercase tracking-tighter text-white">Strategic Master Audit</span>
-            <span className="text-[9px] text-[#1087a0] font-black uppercase tracking-[0.3em]">Verified Master v2.1</span>
+            <span className="text-[9px] text-[#1087a0] font-black uppercase tracking-[0.3em]">Verified Master v3.0</span>
           </div>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-end">
-            <span className="text-[8px] font-black text-gray-500 uppercase">Status: Online</span>
+            <span className="text-[8px] font-black text-[#1087a0] uppercase">System: Pro-Active</span>
             <div className="text-[10px] font-black uppercase tracking-widest text-white">
-              {t.credits}: <span className="text-[#a02a11]">{ownerMode ? 'UNLIMITED' : credits}</span>
+              {t.credits}: <span className="text-[#a02a11]">{ownerMode ? 'MASTER ACCESS' : credits}</span>
             </div>
           </div>
           <button onClick={() => setShowPricing(true)} className="bg-white text-black px-6 py-2.5 rounded-full font-black text-[9px] uppercase tracking-widest hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">
@@ -150,8 +150,8 @@ export default function App() {
                 <div className="relative glass p-10 rounded-[40px] border border-white/10 flex items-center justify-center gap-8 group-hover:bg-white/5 transition-all">
                   <div className="text-4xl group-hover:scale-110 transition-transform duration-500">📥</div>
                   <div className="text-left">
-                    <span className="block text-xs font-black uppercase tracking-[0.3em] text-white">Upload Video Audit</span>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-gray-500 italic">Max {MAX_FILE_SIZE_MB}MB • High Performance Audit</span>
+                    <span className="block text-xs font-black uppercase tracking-[0.3em] text-white">Upload Strategic Video</span>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-gray-500 italic">Full Analysis Support • Max {MAX_FILE_SIZE_MB}MB</span>
                   </div>
                 </div>
                 <input type="file" className="hidden" accept="video/*" onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
@@ -165,9 +165,12 @@ export default function App() {
             <div className="relative w-32 h-32">
               <div className="absolute inset-0 border-2 border-[#a02a11]/20 rounded-full"></div>
               <div className="absolute inset-0 border-t-2 border-[#a02a11] rounded-full animate-spin"></div>
-              <div className="absolute inset-4 glass rounded-full flex items-center justify-center text-xs font-black text-[#a02a11]">AI</div>
+              <div className="absolute inset-4 glass rounded-full flex items-center justify-center text-[10px] font-black text-[#a02a11] uppercase">Audit</div>
             </div>
-            <p className="text-4xl font-black uppercase italic tracking-tighter animate-pulse text-white">{t.processing}</p>
+            <div className="space-y-4">
+              <p className="text-4xl font-black uppercase italic tracking-tighter animate-pulse text-white">Master Strategy Analysis...</p>
+              <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.4em]">Il Senior Master sta analizzando ogni fotogramma</p>
+            </div>
           </div>
         )}
 
@@ -183,7 +186,7 @@ export default function App() {
 
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
       <footer className="mt-auto py-12 text-[8px] text-gray-700 font-black uppercase tracking-[0.5em]">
-        © SG STRATEGIC COMPANY • NO BULLSHIT POLICY • 2024-2025
+        © SG STRATEGIC COMPANY • PREMIUM AUDIT v3.0 • NO BULLSHIT POLICY
       </footer>
     </div>
   );
