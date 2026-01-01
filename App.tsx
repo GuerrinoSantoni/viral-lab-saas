@@ -7,7 +7,7 @@ import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
-const MAX_FILE_SIZE_MB = 15; // Ridotto per stabilità browser-side
+const MAX_FILE_SIZE_MB = 10; // Ridotto a 10MB per garantire che l'upload Base64 non fallisca
 
 export default function App() {
   const [lang] = useState<Language>('IT');
@@ -25,11 +25,11 @@ export default function App() {
     if (!platform) return alert("Seleziona una piattaforma!");
     
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`File troppo grande. Per l'analisi immediata via browser il limite è ${MAX_FILE_SIZE_MB}MB. Comprimi il video e riprova.`);
+      return alert(`File troppo grande. Per l'analisi via browser il limite di sicurezza è ${MAX_FILE_SIZE_MB}MB. Comprimi il video o caricalo più breve.`);
     }
 
     setLoading(true);
-    setStatus("Connessione ai server Master...");
+    setStatus("Analisi Master in corso...");
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
@@ -37,7 +37,14 @@ export default function App() {
       setCredits(prev => prev - 1);
     } catch (e: any) {
       console.error("ERROR:", e);
-      alert(`Il server ha rifiutato il video. Questo accade se il video ha un formato non supportato o se i server Google sono sovraccarichi. Riprova con un video più breve o in formato MP4 standard.`);
+      alert(`Il server non ha accettato il video. 
+
+CONSIGLIO TECNICO:
+1. Usa un video più corto (max 30-60 secondi).
+2. Assicurati che sia < 10MB.
+3. Formato consigliato: MP4 standard.
+
+L'API Google ha limiti stretti per gli upload diretti da browser.`);
     } finally {
       setLoading(false);
       setStatus("");
