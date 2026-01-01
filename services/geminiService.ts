@@ -2,6 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
+// Modello richiesto: Gemini 3 Flash
 const MODEL_NAME = 'gemini-3-flash-preview';
 
 const getAI = () => {
@@ -12,6 +13,7 @@ const getAI = () => {
 
 function cleanJSON(text: string): string {
   if (!text) return "{}";
+  // Rimuove markdown e pulisce il testo per il parsing JSON
   let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
   const start = cleaned.indexOf('{');
   const end = cleaned.lastIndexOf('}');
@@ -29,71 +31,67 @@ export async function analyzeVideo(
 ): Promise<AnalysisResult> {
   const ai = getAI();
   
-  onProgress?.("Ottimizzazione bitstream...");
+  onProgress?.("Preparazione stream video...");
   const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = reject;
+    reader.onerror = (e) => reject(new Error("Errore lettura file: " + e));
   });
 
-  // FASE 1: SCANSIONE MULTIMODALE (FLASH)
-  onProgress?.("Fase 1: Analisi Video (Modello Flash)...");
-  const scanResponse = await ai.models.generateContent({
+  // Determiniamo il MIME type corretto (Gemini preferisce video/mp4)
+  const mimeType = file.type || "video/mp4";
+
+  onProgress?.("Audit Senior in corso (Fase Unica)...");
+  
+  // Eseguiamo tutto in una sola chiamata per evitare doppi upload pesanti
+  const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: {
+    contents: [{
       parts: [
-        { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: "Analizza questo video come un esperto senior. Descrivi contenuto, tecnica, audio e carisma. Fornisci un report tecnico completo." }
+        { inlineData: { data: base64, mimeType } },
+        { text: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA.
+          Analizza questo video per la piattaforma ${platform} in lingua ${lang}.
+          
+          ESEGUI UN AUDIT SPIETATO E PROFESSIONALE:
+          1. Valuta il potenziale virale (0-100).
+          2. Crea 3 titoli magnetici.
+          3. Scrivi un'analisi tecnica di almeno 300 parole (montaggio, gancio, carisma).
+          4. Scrivi un copy persuasivo con hashtag.
+          5. Fornisci un briefing visivo per lo storyboard.
+
+          RISPONDI ESCLUSIVAMENTE CON QUESTO JSON:
+          {
+            "score": "numero",
+            "title": "Titoli | separati | da pipe",
+            "analysis": "audit senior testuale",
+            "caption": "copy caption",
+            "hashtags": ["tag1", "tag2"],
+            "visualData": "briefing visivo per storyboard",
+            "platformSuggestion": "consigli algoritmo",
+            "ideaDuration": "durata ideale"
+          }` 
+        }
       ]
-    }
-  });
-
-  const technicalReport = scanResponse.text;
-  if (!technicalReport) throw new Error("Errore durante la scansione multimodale.");
-
-  // FASE 2: TRASFORMAZIONE STRATEGICA (FLASH)
-  // Usiamo Flash anche qui per coerenza e velocità totale
-  onProgress?.("Fase 2: Generazione Strategia Senior...");
-  const finalResponse = await ai.models.generateContent({
-    model: MODEL_NAME,
-    contents: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA.
-    Basandoti su questo report, crea una strategia per ${platform} in ${lang}:
-    
-    REPORT:
-    ${technicalReport}
-    
-    RISPONDI ESCLUSIVAMENTE CON UN OGGETTO JSON:
-    {
-      "score": "voto 0-100",
-      "title": "Titoli virali | separati da pipe",
-      "analysis": "audit tecnico dettagliato (min 300 parole)",
-      "caption": "copy pronto all'uso",
-      "hashtags": ["tag1", "tag2"],
-      "visualData": "descrizione per lo storyboard",
-      "platformSuggestion": "consigli algoritmo",
-      "ideaDuration": "durata ideale"
-    }`,
+    }],
     config: { 
-      responseMimeType: "application/json",
-      temperature: 0.7
+      responseMimeType: "application/json"
     }
   });
 
-  return JSON.parse(cleanJSON(finalResponse.text || "{}"));
+  const text = response.text;
+  if (!text) throw new Error("Il modello non ha generato una risposta valida.");
+
+  return JSON.parse(cleanJSON(text));
 }
 
 export async function generateIdea(prompt: string, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: `Genera una strategia senior per ${platform} in ${lang}. Idea: "${prompt}". Rispondi in JSON.`,
-    config: { 
-      responseMimeType: "application/json",
-      temperature: 0.8
-    }
+    contents: `Genera una strategia virale senior (20y exp) per ${platform} in ${lang}. Idea: "${prompt}". Rispondi in JSON.`,
+    config: { responseMimeType: "application/json" }
   });
-  
   return JSON.parse(cleanJSON(response.text || "{}"));
 }
 
@@ -101,11 +99,8 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: `Crea uno storyboard in ${lang} basato su: ${visualData}. Genera un array JSON di scene con scene (numero), description, audioSFX, duration.`,
-    config: { 
-      responseMimeType: "application/json"
-    }
+    contents: `Crea uno storyboard in ${lang} basato su: ${visualData}. Restituisci un array JSON di scene.`,
+    config: { responseMimeType: "application/json" }
   });
-
   return JSON.parse(cleanJSON(response.text || "[]"));
 }
