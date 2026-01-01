@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Platform, AnalysisResult, Language } from './types';
 import { PLATFORMS, TRANSLATIONS } from './constants';
 import { analyzeVideo, generateIdea } from './services/geminiService';
@@ -7,7 +7,7 @@ import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
-const MAX_FILE_SIZE_MB = 20; // Limite rigoroso a 20MB per stabilità garantita
+const MAX_FILE_SIZE_MB = 20;
 
 export default function App() {
   const [lang] = useState<Language>('IT');
@@ -22,29 +22,28 @@ export default function App() {
   const [credits, setCredits] = useState(10);
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Seleziona una piattaforma!");
+    if (!platform) return alert("Seleziona prima una piattaforma!");
     
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`File troppo pesante. Come richiesto, il limite per l'audit istantaneo è ${MAX_FILE_SIZE_MB}MB.`);
+      return alert(`File troppo pesante per l'upload diretto. Usa un video < ${MAX_FILE_SIZE_MB}MB.`);
     }
 
     setLoading(true);
-    setStatus("Analisi Master in corso (Flash Mode)...");
+    setStatus("Compressione e Upload in corso...");
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
       setResult(res);
       setCredits(prev => prev - 1);
     } catch (e: any) {
-      console.error("ERROR:", e);
-      alert(`ATTENZIONE: Il processo ha riscontrato un ostacolo tecnico.
+      console.error("ANALYSIS ERROR:", e);
+      alert(`ERRORE DI TRASMISSIONE.
+Il file da ${Math.round(file.size / 1024 / 1024)}MB potrebbe aver causato un timeout.
 
-VERIFICA QUESTI PUNTI:
-1. Assicurati che il video sia un MP4/MOV standard.
-2. Se il file è esattamente 20MB, la conversione Base64 potrebbe superare i limiti API. Prova con un file leggermente più piccolo (15MB).
-3. Riprova: a volte i server Google hanno picchi di latenza.
-
-Il modello Gemini 3 Flash è attivo.`);
+CONSIGLIO:
+1. Riprova (spesso è un problema di rete temporaneo).
+2. Se persiste, usa un video sotto i 10MB per maggiore stabilità.
+3. Verifica che la tua connessione in upload sia stabile.`);
     } finally {
       setLoading(false);
       setStatus("");
@@ -56,7 +55,7 @@ Il modello Gemini 3 Flash è attivo.`);
     if (!ideaText.trim()) return alert("Scrivi la tua idea!");
     
     setLoading(true);
-    setStatus("Generazione strategia creativa...");
+    setStatus("Generazione strategia...");
     try {
       const res = await generateIdea(ideaText, platform, lang);
       setResult(res);
@@ -110,8 +109,8 @@ Il modello Gemini 3 Flash è attivo.`);
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all">
                     <div className="text-6xl">🚀</div>
-                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video (Max {MAX_FILE_SIZE_MB}MB)</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Ottimizzato con Gemini 3 Flash • Risultati Immediati</span>
+                    <span className="text-xl font-black uppercase tracking-tighter italic">Analisi Video (Max 20MB)</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Ottimizzato con Gemini 3 Flash</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -120,10 +119,10 @@ Il modello Gemini 3 Flash è attivo.`);
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Descrivi la tua idea strategica..."
+                    placeholder="Descrivi la tua idea..."
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
-                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all">Genera Piano d'Attacco</button>
+                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all">Genera Strategia</button>
                 </div>
               )}
             </div>
@@ -140,8 +139,8 @@ Il modello Gemini 3 Flash è attivo.`);
               <p className="text-3xl font-black uppercase italic tracking-tighter text-white">
                 {status}
               </p>
-              <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] font-black animate-pulse">
-                Elaborazione Ultra-Veloce con Gemini 3 Flash
+              <p className="text-[10px] text-gray-400 uppercase tracking-[0.4em] font-black animate-pulse">
+                Il Master sta elaborando i dati multimodali
               </p>
             </div>
           </div>
