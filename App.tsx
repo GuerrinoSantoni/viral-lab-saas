@@ -18,19 +18,17 @@ export default function App() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [showPricing, setShowPricing] = useState(false);
-  const [credits, setCredits] = useState(5);
+  const [credits, setCredits] = useState(10);
 
   const loadingMessages = [
-    "Stabilizzazione connessione con Gemini 3 Pro...",
-    "Caricamento stream video (40MB Audit Mode)...",
-    "Analisi fotogramma per fotogramma (Deep Scanning)...",
-    "Estrazione pattern audio e frequenze gancio...",
-    "Analisi ritenzione e curva dell'attenzione...",
-    "Il Senior Strategist sta scrivendo il report...",
-    "Elaborazione della caption magnetica...",
-    "Sintetizzazione insight per la viralità...",
-    "Finalizzazione del verdetto professionale...",
-    "Ci siamo quasi, la qualità richiede tempo..."
+    "Caricamento Master Engine (Gemini 3 Pro)...",
+    "Analisi fotogrammi ad alta densità...",
+    "Scansione audio e frequenze di ritenzione...",
+    "Analisi psicologica degli hook (3s rule)...",
+    "Il Master sta valutando il montaggio...",
+    "Sintetizzazione verdetto professionale...",
+    "Generazione report strategico spietato...",
+    "Fase finale: algoritmi di viralità..."
   ];
 
   useEffect(() => {
@@ -38,14 +36,14 @@ export default function App() {
     if (loading) {
       interval = setInterval(() => {
         setLoadingStep(prev => (prev + 1) % loadingMessages.length);
-      }, 10000); // Messaggi più lenti per giustificare l'attesa di 5 minuti
+      }, 15000); // 15 secondi per messaggio per coprire i 5 minuti
     }
     return () => clearInterval(interval);
   }, [loading]);
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Seleziona prima la piattaforma di destinazione.");
-    if (file.size > MAX_FILE_SIZE_BYTES) return alert(`Il file eccede il limite di ${MAX_FILE_SIZE_MB}MB.`);
+    if (!platform) return alert("Seleziona prima la piattaforma.");
+    if (file.size > MAX_FILE_SIZE_BYTES) return alert("File troppo grande (Max 40MB).");
     if (credits <= 0) return setShowPricing(true);
 
     setLoading(true);
@@ -56,8 +54,8 @@ export default function App() {
       setResult(res);
       setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      console.error("Critical Error during Video Audit:", e);
-      alert("Il server ha interrotto l'analisi. Questo accade solitamente per timeout di rete o file troppo complessi per questa sessione. Riprova tra un istante.");
+      console.error(e);
+      alert("Timeout o errore di connessione. Se il video è vicino ai 40MB, assicurati di avere una connessione stabile. Riprova.");
     } finally {
       setLoading(false);
     }
@@ -66,22 +64,15 @@ export default function App() {
   const t = (TRANSLATIONS[lang] || TRANSLATIONS.IT) as any;
 
   return (
-    <div className="min-h-screen p-4 md:p-8 flex flex-col items-center bg-[#000] selection:bg-[#a02a11] selection:text-white">
-      <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-16 premium-border shadow-2xl">
+    <div className="min-h-screen p-4 md:p-8 flex flex-col items-center bg-[#000] text-white">
+      <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-16 shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#a02a11] rounded-xl flex items-center justify-center font-black text-xl shadow-[0_0_20px_rgba(160,42,17,0.5)]">SG</div>
-          <div className="hidden sm:block">
-            <span className="font-black text-xs uppercase tracking-widest text-white">Master Strategic Audit</span>
-            <p className="text-[8px] text-[#1087a0] font-black uppercase tracking-[0.4em]">PRO ENGINE V5.0</p>
-          </div>
+          <div className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black">SG</div>
+          <span className="font-black text-[10px] uppercase tracking-widest hidden sm:block">Master Strategic Audit v5.0</span>
         </div>
-        <div className="flex items-center gap-8">
-          <div className="text-[10px] font-black uppercase tracking-widest text-white">
-            {t.credits}: <span className="text-[#a02a11]">{credits}</span>
-          </div>
-          <button onClick={() => setShowPricing(true)} className="bg-white text-black px-6 py-2 rounded-full font-black text-[9px] uppercase tracking-widest hover:bg-[#a02a11] hover:text-white transition-all">
-            {t.upgrade}
-          </button>
+        <div className="flex items-center gap-6">
+          <span className="text-[10px] font-black uppercase text-gray-500">{t.credits}: {credits}</span>
+          <button onClick={() => setShowPricing(true)} className="bg-white text-black px-5 py-2 rounded-full font-black text-[9px] uppercase tracking-widest hover:bg-[#a02a11] hover:text-white transition-all">UPGRADE</button>
         </div>
       </nav>
 
@@ -89,28 +80,24 @@ export default function App() {
         {!result && !loading && (
           <div className="w-full text-center space-y-16 animate-fadeIn">
             <div className="space-y-4">
-              <h2 className="text-[#a02a11] text-xs font-black uppercase tracking-[0.6em]">{t.tagline}</h2>
-              <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-none text-white">
-                VIDEO.<span className="text-gradient">MASTER</span>
+              <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter text-white">
+                VIDEO.<span className="text-[#a02a11]">AUDIT</span>
               </h1>
               <p className="text-gray-500 font-bold text-xs uppercase tracking-widest">Analisi tecnica professionale con 20 anni di esperienza</p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl mx-auto">
               {PLATFORMS.map(p => (
                 <PlatformCard key={p.id} id={p.id as Platform} label={p.label} icon={p.icon} isSelected={platform === p.id} onClick={() => setPlatform(p.id as Platform)} />
               ))}
             </div>
 
-            <div className={`w-full transition-all duration-700 ${platform ? 'opacity-100 scale-100' : 'opacity-20 blur-sm pointer-events-none scale-95'}`}>
-              <label className="relative inline-block group cursor-pointer w-full max-w-3xl">
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#a02a11] to-[#1087a0] rounded-[40px] blur opacity-25 group-hover:opacity-100 transition duration-1000"></div>
-                <div className="relative glass p-20 rounded-[40px] border border-white/10 flex flex-col items-center gap-8 group-hover:bg-black/40 transition-all border-dashed group-hover:border-solid">
-                  <div className="text-8xl drop-shadow-[0_0_30px_rgba(160,42,17,0.6)]">📽️</div>
-                  <div className="space-y-2">
-                    <span className="block text-2xl font-black uppercase tracking-tighter text-white">Upload Video Audit</span>
-                    <span className="block text-[10px] font-black uppercase tracking-widest text-gray-500">Max {MAX_FILE_SIZE_MB}MB • Deep Strategic Processing</span>
-                  </div>
+            <div className={`w-full transition-all ${platform ? 'opacity-100' : 'opacity-20 pointer-events-none'}`}>
+              <label className="cursor-pointer block">
+                <div className="glass p-20 rounded-[40px] border border-white/10 flex flex-col items-center gap-6 hover:bg-white/5 transition-all">
+                  <div className="text-6xl drop-shadow-[0_0_20px_rgba(160,42,17,0.5)]">📤</div>
+                  <span className="text-xl font-black uppercase tracking-tighter">Upload per Audit Senior</span>
+                  <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Supporto file fino a 40MB</span>
                 </div>
                 <input type="file" className="hidden" accept="video/*" onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
               </label>
@@ -119,50 +106,26 @@ export default function App() {
         )}
 
         {loading && (
-          <div className="py-24 flex flex-col items-center gap-16 text-center w-full max-w-2xl animate-fadeIn">
-            <div className="relative w-40 h-40">
-              <div className="absolute inset-0 border-[6px] border-[#a02a11]/10 rounded-full"></div>
-              <div className="absolute inset-0 border-t-[6px] border-[#a02a11] rounded-full animate-spin"></div>
-              <div className="absolute inset-4 glass rounded-full flex items-center justify-center overflow-hidden">
-                <div className="scanner absolute inset-0 opacity-40"></div>
-                <span className="text-[10px] font-black text-white uppercase tracking-widest relative z-10">AUDITING</span>
-              </div>
-            </div>
-            <div className="space-y-8 w-full">
-              <p className="text-4xl font-black uppercase italic tracking-tighter text-white animate-pulse h-20 flex items-center justify-center">
-                {loadingMessages[loadingStep]}
-              </p>
+          <div className="py-24 flex flex-col items-center gap-12 text-center w-full max-w-xl animate-fadeIn">
+            <div className="w-32 h-32 border-4 border-[#a02a11]/20 border-t-[#a02a11] rounded-full animate-spin"></div>
+            <div className="space-y-6">
+              <p className="text-3xl font-black uppercase italic tracking-tighter text-white animate-pulse">{loadingMessages[loadingStep]}</p>
               <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                 <div className="bg-[#a02a11] h-full animate-[loading_300s_linear_infinite]" style={{width: '100%'}}></div>
               </div>
-              <p className="text-[9px] text-[#1087a0] font-black uppercase tracking-[0.5em] leading-loose max-w-md mx-auto">
-                Non chiudere la finestra. L'audit senior richiede fino a 5 minuti per analizzare frame, audio e dinamiche algoritmiche.
-              </p>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em]">Non chiudere la finestra. Qualità senior in corso.</p>
             </div>
           </div>
         )}
 
         {result && !loading && (
-          <AnalysisView 
-            result={result} 
-            videoFile={lastFile || undefined}
-            language={lang} 
-            onReset={() => {setResult(null); setPlatform(null); setLastFile(null);}} 
-          />
+          <AnalysisView result={result} videoFile={lastFile || undefined} language={lang} onReset={() => {setResult(null); setPlatform(null);}} />
         )}
       </main>
 
       {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
-      
-      <footer className="mt-auto py-12 text-[10px] text-gray-800 font-black uppercase tracking-[0.6em]">
-        © SG STRATEGIC COMPANY • NO BULLSHIT POLICY • DEEP ENGINE V5.0
-      </footer>
-      
       <style>{`
-        @keyframes loading {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(0%); }
-        }
+        @keyframes loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(0%); } }
       `}</style>
     </div>
   );
