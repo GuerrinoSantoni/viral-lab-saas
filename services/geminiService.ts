@@ -12,13 +12,13 @@ const RESPONSE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
     score: { type: Type.STRING, description: "Voto da 0 a 100" },
-    title: { type: Type.STRING, description: "3 Titoli separati da |" },
-    analysis: { type: Type.STRING, description: "Audit tecnico dettagliato" },
-    caption: { type: Type.STRING, description: "Copy strategico completo" },
+    title: { type: Type.STRING, description: "3 Titoli magnetici separati da |" },
+    analysis: { type: Type.STRING, description: "Audit tecnico spietato e profondo (minimo 300 parole)" },
+    caption: { type: Type.STRING, description: "Copy persuasivo con tecniche di copywriting avanzato" },
     hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
-    visualData: { type: Type.STRING, description: "Direttive di editing" },
-    platformSuggestion: { type: Type.STRING, description: "Consigli algoritmo" },
-    ideaDuration: { type: Type.STRING, description: "Durata consigliata" }
+    visualData: { type: Type.STRING, description: "Sintesi della strategia visiva per lo storyboard" },
+    platformSuggestion: { type: Type.STRING, description: "Consigli specifici per l'algoritmo attuale" },
+    ideaDuration: { type: Type.STRING, description: "Minutaggio esatto al secondo" }
   },
   required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"]
 };
@@ -35,14 +35,14 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     model: 'gemini-3-flash-preview',
     contents: {
       parts: [
-        { text: `RUOLO: Senior Master Strategist (20 anni exp). PIATTAFORMA: ${platform}. LINGUA: ${lang}. Esegui un audit spietato di questo VIDEO. Analizza hook, pacing e retention.` },
+        { text: `Sei un Master Strategist con 20 anni di esperienza in produzione video e viral marketing. Analizza questo video per ${platform} in ${lang}. Sii brutale, analitico e PROLISSO. Non risparmiare dettagli tecnici.` },
         { inlineData: { data: base64, mimeType: file.type } }
       ]
     },
     config: { 
       responseMimeType: "application/json", 
-      temperature: 0.1,
-      thinkingConfig: { thinkingBudget: 4000 },
+      temperature: 0.15,
+      thinkingConfig: { thinkingBudget: 8000 },
       responseSchema: RESPONSE_SCHEMA 
     }
   });
@@ -56,13 +56,13 @@ export async function generateIdea(prompt: string, platform: Platform, lang: Lan
     model: 'gemini-3-flash-preview',
     contents: {
       parts: [
-        { text: `RUOLO: Senior Master Strategist (20 anni exp). PIATTAFORMA: ${platform}. LINGUA: ${lang}. Crea una strategia VIRALE partendo da questa idea testuale: "${prompt}". Non analizzare video, inventa tu il contenuto vincente.` }
+        { text: `Genera una strategia VIRALE Senior (20 anni exp) per ${platform} in ${lang}. Idea base: "${prompt}". Crea un piano d'attacco tecnico dettagliato.` }
       ]
     },
     config: { 
       responseMimeType: "application/json", 
       temperature: 0.7,
-      thinkingConfig: { thinkingBudget: 2000 },
+      thinkingConfig: { thinkingBudget: 4000 },
       responseSchema: RESPONSE_SCHEMA 
     }
   });
@@ -72,7 +72,15 @@ export async function generateIdea(prompt: string, platform: Platform, lang: Lan
 
 export async function generateSceneAnalysis(visualData: string, lang: Language, file?: File): Promise<Scene[]> {
   const ai = getAI();
-  const parts: any[] = [{ text: `Genera uno storyboard tecnico basato su: ${visualData}. Lingua: ${lang}. Restituisci JSON array di Scene.` }];
+  const parts: any[] = [{ 
+    text: `CREA UNO STORYBOARD TECNICO SENIOR (20 anni exp). 
+    REGOLE MANDATORIE:
+    1. Genera tra le 5 e le 10 scene.
+    2. Per OGNI scena, il campo "description" deve avere ALMENO 100 PAROLE (descrivi inquadratura, movimenti camera, luci, props, espressioni).
+    3. Per OGNI scena, il campo "audioSFX" deve avere ALMENO 100 PAROLE (descrivi script parlato, toni, pause, sound design, musica di sottofondo, effetti ambientali).
+    4. Sii estremamente tecnico e prolisso. Usa un linguaggio da regista professionista.
+    Basati su: ${visualData}. Lingua: ${lang}.` 
+  }];
   
   if (file) {
     const base64 = await new Promise<string>((resolve) => {
@@ -89,15 +97,15 @@ export async function generateSceneAnalysis(visualData: string, lang: Language, 
     config: { 
       responseMimeType: "application/json",
       temperature: 0.2,
-      thinkingConfig: { thinkingBudget: 2000 },
+      thinkingConfig: { thinkingBudget: 12000 },
       responseSchema: {
         type: Type.ARRAY,
         items: {
           type: Type.OBJECT,
           properties: {
             scene: { type: Type.INTEGER },
-            description: { type: Type.STRING },
-            audioSFX: { type: Type.STRING },
+            description: { type: Type.STRING, description: "Descrizione visiva tecnica (min 100 parole)" },
+            audioSFX: { type: Type.STRING, description: "Sound design e script (min 100 parole)" },
             duration: { type: Type.STRING }
           },
           required: ["scene", "description", "audioSFX", "duration"]
@@ -106,5 +114,6 @@ export async function generateSceneAnalysis(visualData: string, lang: Language, 
     }
   });
 
-  return JSON.parse(response.text || "[]");
+  const res = JSON.parse(response.text || "[]");
+  return res;
 }
