@@ -1,10 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
+// Inizializzazione sicura: usiamo una funzione per creare l'istanza quando serve
 const getAI = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    throw new Error("API_KEY non trovata. Configurala su Vercel.");
+    throw new Error("API_KEY non configurata. Aggiungila nelle Environment Variables di Vercel.");
   }
   return new GoogleGenAI({ apiKey });
 };
@@ -27,19 +28,20 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     contents: {
       parts: [
         { 
-          text: `Sei uno YouTuber Senior con 20 anni di esperienza. 
-                 Analizza questo video per ${platform}. Lingua: ${lang}.
-                 Sii tecnico e orientato alla viralità.
-                 Restituisci ESCLUSIVAMENTE un JSON:
+          text: `Agisci come uno YouTuber Senior con 20 anni di esperienza e 10M+ di iscritti. 
+                 Analizza tecnicamente questo video per la piattaforma ${platform}.
+                 Lingua di output: ${lang}.
+                 Sii brutale ma costruttivo.
+                 Restituisci ESCLUSIVAMENTE un JSON con questa struttura:
                  {
-                   "score": "0-100",
-                   "title": "titolo",
-                   "analysis": "analisi",
-                   "caption": "copy",
-                   "hashtags": ["tag1"],
-                   "visualData": "descrizione per script",
-                   "platformSuggestion": "perché questo formato",
-                   "ideaDuration": "durata"
+                   "score": "numero da 0 a 100",
+                   "title": "Titolo Strategico",
+                   "analysis": "Analisi tecnica di ritenzione e gancio",
+                   "caption": "Copy completo di spazi e formattazione",
+                   "hashtags": ["tag1", "tag2"],
+                   "visualData": "Descrizione dettagliata per generare uno script di rifacimento",
+                   "platformSuggestion": "Suggerimento posizionamento",
+                   "ideaDuration": "Durata ideale consigliata"
                  }` 
         },
         { 
@@ -65,8 +67,9 @@ export async function generateScriptOnly(visualData: string, lang: Language): Pr
     contents: { 
       parts: [
         { 
-          text: `Crea uno script cinematografico basato su: "${visualData}". Lingua: ${lang}. 
-                 Restituisci un array JSON di oggetti con: scene (number), description, audioSFX, duration.` 
+          text: `In base a questa analisi video: "${visualData}", crea uno script di produzione 8K professionale.
+                 Lingua: ${lang}.
+                 Restituisci un array JSON di oggetti con chiavi: scene (number), description (descrizione visuale), audioSFX (audio e sound design), duration (es: "0:02").` 
         }
       ] 
     },
