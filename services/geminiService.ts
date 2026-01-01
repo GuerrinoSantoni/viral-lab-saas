@@ -32,7 +32,7 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
   });
   
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     contents: {
       parts: [
         { text: `RUOLO: Senior Master Strategist (20 anni exp). PIATTAFORMA: ${platform}. LINGUA: ${lang}. Esegui un audit spietato di questo VIDEO. Analizza hook, pacing e retention.` },
@@ -41,7 +41,8 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     },
     config: { 
       responseMimeType: "application/json", 
-      temperature: 0.2,
+      temperature: 0.1,
+      thinkingConfig: { thinkingBudget: 4000 },
       responseSchema: RESPONSE_SCHEMA 
     }
   });
@@ -52,7 +53,7 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
 export async function generateIdea(prompt: string, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     contents: {
       parts: [
         { text: `RUOLO: Senior Master Strategist (20 anni exp). PIATTAFORMA: ${platform}. LINGUA: ${lang}. Crea una strategia VIRALE partendo da questa idea testuale: "${prompt}". Non analizzare video, inventa tu il contenuto vincente.` }
@@ -61,6 +62,7 @@ export async function generateIdea(prompt: string, platform: Platform, lang: Lan
     config: { 
       responseMimeType: "application/json", 
       temperature: 0.7,
+      thinkingConfig: { thinkingBudget: 2000 },
       responseSchema: RESPONSE_SCHEMA 
     }
   });
@@ -82,11 +84,12 @@ export async function generateSceneAnalysis(visualData: string, lang: Language, 
   }
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     contents: { parts },
     config: { 
       responseMimeType: "application/json",
-      temperature: 0.3,
+      temperature: 0.2,
+      thinkingConfig: { thinkingBudget: 2000 },
       responseSchema: {
         type: Type.ARRAY,
         items: {
