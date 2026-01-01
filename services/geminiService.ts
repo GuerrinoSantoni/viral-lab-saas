@@ -8,20 +8,10 @@ const getAI = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-const RESPONSE_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    score: { type: Type.STRING, description: "Voto da 0 a 100" },
-    title: { type: Type.STRING, description: "3 Titoli magnetici separati da |" },
-    analysis: { type: Type.STRING, description: "Audit tecnico spietato, profondo e descrittivo di COSA SUCCEDE nel video (minimo 500 parole)" },
-    caption: { type: Type.STRING, description: "Copy persuasivo strategico" },
-    hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
-    visualData: { type: Type.STRING, description: "Analisi visiva dettagliata per lo storyboard" },
-    platformSuggestion: { type: Type.STRING, description: "Consigli specifici per l'algoritmo" },
-    ideaDuration: { type: Type.STRING, description: "Minutaggio esatto" }
-  },
-  required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"]
-};
+// Funzione di utilità per pulire il JSON restituito dall'AI
+function cleanJSON(text: string): string {
+  return text.replace(/```json/g, '').replace(/```/g, '').trim();
+}
 
 export async function analyzeVideo(file: File, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
@@ -31,35 +21,42 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     reader.onload = () => resolve((reader.result as string).split(',')[1]);
   });
   
-  // Usiamo Flash per l'upload video: è molto più robusto e veloce con file grandi (50MB)
+  // Usiamo Flash per la stabilità di upload. Rimuoviamo il responseSchema per evitare Error 500.
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: {
       parts: [
         { text: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA. 
         Analizza questo video per ${platform} in ${lang}. 
-        NON ESSERE BREVE. Voglio un report tecnico e spietato. 
-        Descrivi nel dettaglio:
-        1. Di cosa parla il video esattamente (analisi semantica).
-        2. Qualità della luce e dell'audio.
-        3. Ritmo del montaggio e ritenzione dello spettatore.
-        4. Come migliorarlo per diventare virale.` },
+        Voglio un report tecnico e spietato.
+        
+        RESTITUISCI ESCLUSIVAMENTE UN OGGETTO JSON con questa struttura:
+        {
+          "score": "voto da 0 a 100",
+          "title": "3 titoli magnetici separati da |",
+          "analysis": "audit tecnico spietato di almeno 500 parole sui contenuti, luci, audio e ritmo",
+          "caption": "copy persuasivo strategico",
+          "hashtags": ["tag1", "tag2"],
+          "visualData": "analisi visiva tecnica per lo storyboard",
+          "platformSuggestion": "consigli per l'algoritmo",
+          "ideaDuration": "minutaggio esatto"
+        }` },
         { inlineData: { data: base64, mimeType: file.type } }
       ]
     },
     config: { 
-      responseMimeType: "application/json", 
       temperature: 0.1,
-      // Disabilitiamo il thinking budget qui per evitare errori di payload troppo grande
-      responseSchema: RESPONSE_SCHEMA 
+      // NESSUN responseSchema qui per evitare il crash 500 del backend Google con multimodal
     }
   });
   
-  return JSON.parse(response.text || "{}");
+  const rawText = response.text || "{}";
+  return JSON.parse(cleanJSON(rawText));
 }
 
 export async function generateIdea(prompt: string, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
+  // Per il testo puro possiamo usare lo schema senza problemi
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: {
@@ -71,7 +68,20 @@ export async function generateIdea(prompt: string, platform: Platform, lang: Lan
       responseMimeType: "application/json", 
       temperature: 0.7,
       thinkingConfig: { thinkingBudget: 4000 },
-      responseSchema: RESPONSE_SCHEMA 
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          score: { type: Type.STRING },
+          title: { type: Type.STRING },
+          analysis: { type: Type.STRING },
+          caption: { type: Type.STRING },
+          hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
+          visualData: { type: Type.STRING },
+          platformSuggestion: { type: Type.STRING },
+          ideaDuration: { type: Type.STRING }
+        },
+        required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"]
+      }
     }
   });
   
@@ -84,9 +94,10 @@ export async function generateSceneAnalysis(visualData: string, lang: Language, 
     text: `CREA UNO STORYBOARD TECNICO SENIOR (20 ANNI DI ESPERIENZA). 
     REGOLE MANDATORIE:
     1. Genera ESATTAMENTE tra 5 e 10 scene.
-    2. Per OGNI scena, il campo "description" DEVE superare le 100 PAROLE (Dettagli cinematografici, luci, inquadrature).
-    3. Per OGNI scena, il campo "audioSFX" DEVE superare le 100 PAROLE (Script, sound design, musica).
-    4. Linguaggio: ${lang}.` 
+    2. Per OGNI scena, il campo "description" DEVE superare le 100 PAROLE.
+    3. Per OGNI scena, il campo "audioSFX" DEVE superare le 100 PAROLE.
+    4. Linguaggio: ${lang}.
+    5. Formato: Restituisci un ARRAY JSON di oggetti con chiavi: scene (int), description (string), audioSFX (string), duration (string).` 
   }];
   
   if (file) {
@@ -98,29 +109,15 @@ export async function generateSceneAnalysis(visualData: string, lang: Language, 
     parts.push({ inlineData: { data: base64, mimeType: file.type } });
   }
 
-  // Qui possiamo usare Pro per la profondità dello storyboard se il visualData è testuale
+  // Usiamo Pro per la qualità del testo dello storyboard
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: { 
-      responseMimeType: "application/json",
       temperature: 0.2,
-      thinkingConfig: { thinkingBudget: 16000 },
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            scene: { type: Type.INTEGER },
-            description: { type: Type.STRING, description: "Descrizione visiva tecnica (MINIMO 100 PAROLE)" },
-            audioSFX: { type: Type.STRING, description: "Sound design e script (MINIMO 100 PAROLE)" },
-            duration: { type: Type.STRING }
-          },
-          required: ["scene", "description", "audioSFX", "duration"]
-        }
-      }
+      thinkingConfig: { thinkingBudget: 16000 }
     }
   });
 
-  return JSON.parse(response.text || "[]");
+  return JSON.parse(cleanJSON(response.text || "[]"));
 }
