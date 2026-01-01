@@ -70,21 +70,43 @@ export async function analyzePrompt(prompt: string, platform: Platform, lang: La
   return JSON.parse(response.text || "{}");
 }
 
-export async function generateScriptOnly(visualData: string, lang: Language): Promise<Scene[]> {
+export async function generateScriptOnly(visualData: string, lang: Language, file?: File): Promise<Scene[]> {
   const ai = getAI();
-  const prompt = `Trasforma questa IDEA VISUALE in un'analisi tecnica delle scene (Analisi delle scene) estrema.
-  Idea: ${visualData}. Lingua: ${lang}.
   
-  REQUISITO DI LUNGHEZZA CRITICO: 
-  Ogni singola "description" di ogni scena DEVE contenere ALMENO 100 PAROLE. 
-  Sii logorroico, ultra-dettagliato e prolisso. Descrivi inquadratura, movimenti, espressioni, colori, grafiche e tagli.
-  Ogni "audioSFX" deve descrivere dettagliatamente il sound design (musica, toni, effetti).
+  let contentParts: any[] = [];
   
-  Genera 5-7 scene numerate. Rispondi SOLO con il JSON richiesto dallo schema.`;
+  if (file) {
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.onerror = reject;
+    });
+    
+    contentParts.push({
+      inlineData: { data: base64, mimeType: file.type }
+    });
+    
+    contentParts.push({
+      text: `AUDIT REALE DELLE SCENE. Analizza i fotogrammi di QUESTO VIDEO specifico.
+      Basandoti su questa strategia: "${visualData}", scrivi un'analisi tecnica scena per scena del video che vedi. 
+      Sii estremamente critico: descrivi cosa succede realmente e come deve cambiare tecnicamente.
+      
+      REQUISITO DI LUNGHEZZA: Ogni singola "description" DEVE avere ALMENO 100 PAROLE. 
+      Descrivi inquadrature, espressioni, testi a video e movimenti di camera reali.
+      Lingua: ${lang}. Rispondi in formato JSON.`
+    });
+  } else {
+    contentParts.push({
+      text: `Crea un'analisi tecnica delle scene basata su questa idea: "${visualData}". 
+      Ogni singola "description" DEVE avere ALMENO 100 PAROLE. 
+      Lingua: ${lang}. Rispondi in formato JSON.`
+    });
+  }
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: { parts: [{ text: prompt }] },
+    contents: { parts: contentParts },
     config: { 
       responseMimeType: "application/json",
       temperature: 0.7,
