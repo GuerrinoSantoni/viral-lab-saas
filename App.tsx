@@ -6,6 +6,9 @@ import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
+const MAX_FILE_SIZE_MB = 40;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 export default function App() {
   const [lang] = useState<Language>('IT');
   const [platform, setPlatform] = useState<Platform | null>(null);
@@ -32,6 +35,11 @@ export default function App() {
 
   const handleAnalyzeVideo = async (file: File) => {
     if (!platform) return alert("Seleziona prima una piattaforma.");
+    
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return alert(`IL VIDEO È TROPPO PESANTE. Il limite massimo è di ${MAX_FILE_SIZE_MB}MB. Comprimilo o usa un file più piccolo.`);
+    }
+
     if (!checkCredits()) return;
     
     setLoading(true);
@@ -40,7 +48,14 @@ export default function App() {
       setResult(res);
       if (!ownerMode) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      alert("ERRORE DI SISTEMA: Controlla la tua API_KEY.");
+      console.error("Analysis Error:", e);
+      if (e.message?.includes("API_KEY_MISSING")) {
+        alert("ERRORE: Configura la tua API_KEY nelle variabili d'ambiente.");
+      } else if (file.size > 20 * 1024 * 1024) {
+        alert("ERRORE: Il file potrebbe essere troppo grande per l'invio diretto all'AI. Prova con un video inferiore a 20MB o comprimilo.");
+      } else {
+        alert("ERRORE DI SISTEMA: Si è verificato un problema durante l'analisi. Riprova più tardi.");
+      }
     } finally {
       setLoading(false);
     }
@@ -135,7 +150,7 @@ export default function App() {
                   <div className="text-4xl group-hover:scale-110 transition-transform duration-500">📥</div>
                   <div className="text-left">
                     <span className="block text-xs font-black uppercase tracking-[0.3em] text-white">Upload Video Audit</span>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-gray-500">Frame Analysis & Retention Strategy</span>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-gray-500 italic">Max {MAX_FILE_SIZE_MB}MB • Frame Analysis & Strategy</span>
                   </div>
                 </div>
                 <input type="file" className="hidden" accept="video/*" onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
