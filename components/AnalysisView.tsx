@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { AnalysisResult, Language, Scene } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { generateScriptOnly } from '../services/geminiService';
+import { generateSceneAnalysis } from '../services/geminiService';
 
 interface Props {
   result: AnalysisResult;
@@ -17,16 +18,13 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
   const t = (TRANSLATIONS[language] || TRANSLATIONS.IT) as any;
 
   const loadScript = async () => {
+    if (!videoFile) return alert("File video mancante.");
     setLoadingScript(true);
     try {
-      const data = await generateScriptOnly(result.visualData, language, videoFile);
-      if (data && data.length > 0) {
-        setScript(data);
-      } else {
-        alert("L'AI non ha generato scene valide. Riprova.");
-      }
+      const data = await generateSceneAnalysis(result.visualData, language, videoFile);
+      setScript(data);
     } catch (e) { 
-      alert("Errore tecnico durante l'analisi delle scene."); 
+      alert("Errore nell'analisi delle scene."); 
     } finally { 
       setLoadingScript(false); 
     }
@@ -35,7 +33,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
   return (
     <div className="w-full space-y-12 animate-fadeIn pb-24">
       <div className="flex justify-between items-center glass p-4 rounded-2xl">
-        <button onClick={onReset} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors">← {t.newAudit}</button>
+        <button onClick={onReset} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white">← {t.newAudit}</button>
         <div className="text-[10px] font-black text-[#1087a0] uppercase tracking-widest">EXECUTIVE REPORT</div>
       </div>
 
@@ -58,12 +56,10 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
           <h3 className="text-[10px] font-black uppercase text-[#a02a11] mb-4 tracking-widest">{t.seniorInsight}</h3>
           <p className="text-gray-300 italic text-sm leading-relaxed font-medium">"{result.analysis}"</p>
         </div>
-        
         <div className="glass p-8 rounded-[40px] border-t-4 border-[#ffe399]">
-          <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-4 tracking-widest">L'IDEA STRATEGICA</h3>
+          <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-4 tracking-widest">STRATEGIA EDITING</h3>
           <p className="text-gray-200 text-sm leading-relaxed font-bold uppercase tracking-tight">{result.visualData}</p>
         </div>
-
         <div className="glass p-8 rounded-[40px] border-t-4 border-[#1087a0]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-[10px] font-black uppercase text-[#1087a0] tracking-widest">{t.strategicCopy}</h3>
@@ -80,48 +76,27 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
         </div>
       </div>
 
-      <div className="glass p-12 rounded-[60px] border border-white/5">
-        {!script ? (
-          <div className="text-center py-20 space-y-10">
-            <div className="text-6xl">🎥</div>
-            <h3 className="text-4xl font-black uppercase tracking-tighter italic">{t.scriptTitle}</h3>
-            <p className="text-gray-500 text-xs uppercase tracking-widest">Analisi tecnica reale basata sul video caricato</p>
-            <button 
-              onClick={loadScript} 
-              disabled={loadingScript} 
-              className="bg-white text-black px-16 py-5 rounded-[20px] font-black uppercase tracking-widest text-xs hover:bg-[#a02a11] hover:text-white transition-all shadow-2xl disabled:opacity-50"
-            >
-              {loadingScript ? "AUDIT VIDEO IN CORSO..." : t.scriptBtn}
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-16">
-            <h3 className="text-3xl font-black text-center uppercase tracking-tighter italic mb-12">{t.scriptTitle}</h3>
-            {script.map((s, i) => (
-              <div key={i} className="space-y-6 animate-fadeInUp" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="flex items-center gap-6">
-                  <div className="w-12 h-12 bg-[#a02a11] rounded-xl flex items-center justify-center font-black">{s.scene}</div>
-                  <div className="h-px flex-1 bg-white/10"></div>
-                  <span className="text-[10px] font-black text-[#1087a0] uppercase">{s.duration}</span>
-                </div>
-                <div className="grid md:grid-cols-4 gap-8">
-                  <div className="md:col-span-3 glass p-10 rounded-3xl text-gray-200 text-sm font-medium leading-[1.8] border border-white/5">
-                    <span className="block text-[8px] font-black text-[#a02a11] uppercase tracking-[0.3em] mb-4">DESCRIZIONE VISIVA TECNICA</span>
-                    {s.description}
-                  </div>
-                  <div className="glass p-8 rounded-3xl bg-[#1087a0]/5 border border-[#1087a0]/20">
-                    <span className="block text-[8px] font-black text-[#1087a0] uppercase tracking-[0.3em] mb-4">SOUND DESIGN & SFX</span>
-                    <p className="italic text-xs text-gray-400 font-medium leading-relaxed uppercase">{s.audioSFX}</p>
-                  </div>
-                </div>
+      {!script ? (
+        <div className="glass p-12 rounded-[60px] text-center space-y-8 border border-white/5">
+          <h3 className="text-4xl font-black uppercase tracking-tighter italic">{t.scriptTitle}</h3>
+          <button onClick={loadScript} disabled={loadingScript} className="bg-white text-black px-12 py-4 rounded-2xl font-black uppercase text-xs hover:bg-[#a02a11] hover:text-white transition-all">
+            {loadingScript ? "AUDITING SCENE..." : t.scriptBtn}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {script.map((s, i) => (
+            <div key={i} className="glass p-10 rounded-[40px] border border-white/5">
+              <div className="flex items-center gap-6 mb-6">
+                <span className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black">{s.scene}</span>
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{s.duration}</span>
               </div>
-            ))}
-            <div className="flex justify-center pt-8">
-               <button onClick={() => setScript(null)} className="text-[10px] font-black uppercase text-gray-500 hover:text-white border-b border-gray-500 hover:border-white transition-all">Chiudi analisi scene</button>
+              <p className="text-sm text-gray-200 leading-relaxed mb-4">{s.description}</p>
+              <p className="text-[10px] text-[#1087a0] font-bold uppercase tracking-widest italic">{s.audioSFX}</p>
             </div>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
