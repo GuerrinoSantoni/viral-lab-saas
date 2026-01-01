@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
@@ -9,16 +10,26 @@ const getAI = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-const SYSTEM_PROMPT_BASE = (platform: string, lang: string) => `
-  RUOLO: Sei un Senior YouTuber Master Strategist con 20 anni di esperienza nel settore dei media digitali.
-  PIATTAFORMA: ${platform}. LINGUA: ${lang}.
-  MISSIONE: Analizza il video fornito con occhio clinico e spietato. Non limitarti a una descrizione superficiale.
-  REQUISITI REPORT:
-  - "score": Un voto da 0 a 100 basato sul potenziale virale reale.
-  - "title": Un titolo magnetico e ottimizzato per l'algoritmo.
-  - "analysis": Un commento senior, tecnico e strategico (max 300 caratteri).
-  - "caption": Una descrizione completa di almeno 200 parole, con storytelling, hook psicologici e CTA multiple.
-  - "visualData": Spiegazione della strategia visiva e del montaggio necessario.
+const SYSTEM_PROMPT = (platform: string, lang: string) => `
+  RUOLO: Sei un Senior Master Strategist con 20 anni di esperienza nel settore video e miliardi di views generate su tutte le piattaforme.
+  PIATTAFORMA TARGET: ${platform}. LINGUA: ${lang}.
+  
+  MISSIONE: Analizza il video allegato come se fossi il consulente più costoso al mondo. Non essere gentile. Sii brutale, tecnico, analitico e focalizzato sul risultato economico e sulla viralità.
+  
+  PARAMETRI DI VALUTAZIONE OBBLIGATORI:
+  1. HOOK (Gancio): I primi 3 secondi sono efficaci? Come distruggerebbero lo scrolling?
+  2. RITENZIONE: Il montaggio mantiene alta l'attenzione o è troppo lento?
+  3. COPY & CALL TO ACTION: Il testo è persuasivo o banale?
+  4. ANALISI TECNICA: Qualità video, audio, sottotitoli e color correction.
+  
+  OUTPUT RICHIESTO (FORMATO JSON):
+  - "score": Voto da 0 a 100 (solo l'eccellenza supera 80).
+  - "title": 3 Opzioni di titoli magnetici divisi da "|".
+  - "analysis": Almeno 150 parole di analisi critica senior.
+  - "caption": Un copy completo, pronto all'uso, ottimizzato per l'algoritmo (almeno 200 parole).
+  - "visualData": Suggerimenti tecnici di editing per migliorare il video.
+  - "platformSuggestion": Perché questo video funzionerà (o fallirà) sulla piattaforma selezionata.
+  - "ideaDuration": La durata ideale che questo video dovrebbe avere per massimizzare la retention.
 `;
 
 const RESPONSE_SCHEMA = {
@@ -45,68 +56,45 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     reader.onerror = reject;
   });
   
-  // Utilizziamo gemini-3-pro-preview per la massima qualità di analisi "Senior"
-  // Questo modello è più potente nel comprendere sfumature in video pesanti
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: {
       parts: [
-        { text: SYSTEM_PROMPT_BASE(platform, lang) + " Esegui un audit integrale e profondo di questo video. Non tralasciare nulla." },
+        { text: SYSTEM_PROMPT(platform, lang) },
         { inlineData: { data: base64, mimeType: file.type } }
       ]
     },
     config: { 
       responseMimeType: "application/json", 
-      temperature: 0.8,
-      thinkingConfig: { thinkingBudget: 4000 }, // Riserviamo budget per il ragionamento strategico
+      temperature: 0.5,
       responseSchema: RESPONSE_SCHEMA 
     }
   });
-  return JSON.parse(response.text || "{}");
+  
+  if (!response.text) throw new Error("Null response from AI");
+  return JSON.parse(response.text);
 }
 
-export async function analyzePrompt(prompt: string, platform: Platform, lang: Language): Promise<AnalysisResult> {
+export async function generateSceneAnalysis(visualData: string, lang: Language, file: File): Promise<Scene[]> {
   const ai = getAI();
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve((reader.result as string).split(',')[1]);
+    reader.onerror = reject;
+  });
+
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: {
       parts: [
-        { text: SYSTEM_PROMPT_BASE(platform, lang) + ` Sviluppa una strategia master per questa idea: "${prompt}".` }
+        { inlineData: { data: base64, mimeType: file.type } },
+        { text: `Analizza tecnicamente le scene di questo video basandoti su questa strategia: ${visualData}. Lingua: ${lang}. Genera un array JSON di oggetti Scene.` }
       ]
     },
     config: { 
-      responseMimeType: "application/json", 
-      temperature: 1.0, 
-      responseSchema: RESPONSE_SCHEMA 
-    }
-  });
-  return JSON.parse(response.text || "{}");
-}
-
-export async function generateScriptOnly(visualData: string, lang: Language, file?: File): Promise<Scene[]> {
-  const ai = getAI();
-  let contentParts: any[] = [];
-  
-  if (file) {
-    const base64 = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
-      reader.onerror = reject;
-    });
-    contentParts.push({ inlineData: { data: base64, mimeType: file.type } });
-  }
-
-  contentParts.push({
-    text: `Analisi tecnica fotogramma per fotogramma. Strategia: ${visualData}. Lingua: ${lang}. Genera JSON array.`
-  });
-  
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
-    contents: { parts: contentParts },
-    config: { 
       responseMimeType: "application/json",
-      temperature: 0.5,
+      temperature: 0.3,
       responseSchema: {
         type: Type.ARRAY,
         items: {
@@ -123,5 +111,6 @@ export async function generateScriptOnly(visualData: string, lang: Language, fil
     }
   });
 
-  return JSON.parse(response.text || "[]");
+  if (!response.text) return [];
+  return JSON.parse(response.text);
 }
