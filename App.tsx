@@ -8,6 +8,8 @@ import { AnalysisView } from './components/AnalysisView';
 
 const MAX_FILE_SIZE_MB = 40;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const API_SAFE_LIMIT_MB = 20;
+const API_SAFE_LIMIT_BYTES = API_SAFE_LIMIT_MB * 1024 * 1024;
 
 export default function App() {
   const [lang] = useState<Language>('IT');
@@ -38,7 +40,12 @@ export default function App() {
     if (!platform) return alert("Seleziona prima una piattaforma.");
     
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return alert(`IL VIDEO È TROPPO PESANTE. Il limite massimo è di ${MAX_FILE_SIZE_MB}MB. Comprimilo o usa un file più piccolo.`);
+      return alert(`FILE TROPPO GRANDE: Il limite massimo dell'app è ${MAX_FILE_SIZE_MB}MB.`);
+    }
+
+    if (file.size > API_SAFE_LIMIT_BYTES) {
+      const proceed = confirm(`ATTENZIONE: Il video è di ${(file.size / (1024 * 1024)).toFixed(1)}MB. Il limite tecnico per l'analisi AI fluida è di ${API_SAFE_LIMIT_MB}MB. L'invio potrebbe fallire o andare in timeout. Vuoi tentare comunque o preferisci comprimerlo?`);
+      if (!proceed) return;
     }
 
     if (!checkCredits()) return;
@@ -50,11 +57,11 @@ export default function App() {
       setResult(res);
       if (!ownerMode) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      console.error("Analysis Error:", e);
+      console.error("Detailed Error:", e);
       if (e.message?.includes("API_KEY_MISSING")) {
-        alert("ERRORE: Configura la tua API_KEY nelle variabili d'ambiente.");
+        alert("ERRORE: API_KEY non trovata nelle impostazioni di sistema.");
       } else {
-        alert("ERRORE DI SISTEMA: Si è verificato un problema durante l'analisi. Riprova più tardi.");
+        alert(`ERRORE DI ELABORAZIONE: ${e.message || "Il server AI non ha risposto. Potrebbe essere dovuto alla dimensione del file. Prova con un video più leggero (max 20MB consigliati)."}`);
       }
     } finally {
       setLoading(false);
@@ -67,7 +74,7 @@ export default function App() {
     if (!checkCredits()) return;
 
     setLoading(true);
-    setLastFile(null); // Reset file if it's a prompt analysis
+    setLastFile(null);
     try {
       const res = await analyzePrompt(textInput, platform, lang);
       setResult(res);
@@ -147,42 +154,4 @@ export default function App() {
                 <div className="absolute -inset-1 bg-gradient-to-r from-[#a02a11] to-[#1087a0] rounded-[40px] blur opacity-10 group-hover:opacity-40 transition duration-1000"></div>
                 <div className="relative glass p-10 rounded-[40px] border border-white/10 flex items-center justify-center gap-8 group-hover:bg-white/5 transition-all">
                   <div className="text-4xl group-hover:scale-110 transition-transform duration-500">📥</div>
-                  <div className="text-left">
-                    <span className="block text-xs font-black uppercase tracking-[0.3em] text-white">Upload Video Audit</span>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-gray-500 italic">Max {MAX_FILE_SIZE_MB}MB • Frame Analysis & Strategy</span>
-                  </div>
-                </div>
-                <input type="file" className="hidden" accept="video/*" onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
-              </label>
-            </div>
-          </div>
-        )}
-
-        {loading && (
-          <div className="py-40 flex flex-col items-center gap-12 text-center">
-            <div className="relative w-32 h-32">
-              <div className="absolute inset-0 border-2 border-[#a02a11]/20 rounded-full"></div>
-              <div className="absolute inset-0 border-t-2 border-[#a02a11] rounded-full animate-spin"></div>
-              <div className="absolute inset-4 glass rounded-full flex items-center justify-center text-xs font-black text-[#a02a11]">AI</div>
-            </div>
-            <p className="text-4xl font-black uppercase italic tracking-tighter animate-pulse text-white">{t.processing}</p>
-          </div>
-        )}
-
-        {result && !loading && (
-          <AnalysisView 
-            result={result} 
-            videoFile={lastFile || undefined}
-            language={lang} 
-            onReset={() => {setResult(null); setPlatform(null); setTextInput(""); setLastFile(null);}} 
-          />
-        )}
-      </main>
-
-      {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
-      <footer className="mt-auto py-12 text-[8px] text-gray-700 font-black uppercase tracking-[0.5em]">
-        © SG STRATEGIC COMPANY • NO BULLSHIT POLICY • 2024-2025
-      </footer>
-    </div>
-  );
-}
+                  <div className="text-
