@@ -1,4 +1,3 @@
-
 export const PLATFORMS = [
   { id: 'YOUTUBE', label: 'YouTube Shorts', icon: '🎬' },
   { id: 'TIKTOK', label: 'TikTok Viral', icon: '🎵' },
@@ -13,13 +12,16 @@ export const TRANSLATIONS = {
     processing: "Analisi Senior in corso...",
     newAudit: "NUOVO AUDIT",
     copyBtn: "COPIA CAPTION",
-    scriptBtn: "SBLOCCA BLUEPRINT 8K",
+    scriptBtn: "SBLOCCA ANALISI DELLE SCENE",
     upgrade: "PIANI E PREZZI",
     credits: "CREDITI",
     viralScore: "VIRAL SCORE",
     seniorInsight: "SENIOR INSIGHT",
     strategicCopy: "STRATEGIC COPY",
-    scriptTitle: "BLUEPRINT SCENE 8K"
+    scriptTitle: "ANALISI TECNICA DELLE SCENE",
+    ideaPlaceholder: "Descrivi brevemente di cosa vuoi parlare (es: 'Come vendere consulenze' oppure 'Un giorno in ufficio')...",
+    ideaBtn: "DAMMI UN'IDEA",
+    orText: "OPPURE CARICA UN VIDEO PER L'AUDIT"
   },
   EN: {
     tagline: "SG Strategic Company • Master Authority",
@@ -27,18 +29,21 @@ export const TRANSLATIONS = {
     processing: "Senior Analysis in progress...",
     newAudit: "NEW AUDIT",
     copyBtn: "COPY CAPTION",
-    scriptBtn: "UNLOCK 8K BLUEPRINT",
+    scriptBtn: "UNLOCK SCENE ANALYSIS",
     upgrade: "PLANS & PRICING",
     credits: "CREDITS",
     viralScore: "VIRAL SCORE",
     seniorInsight: "SENIOR INSIGHT",
     strategicCopy: "STRATEGIC COPY",
-    scriptTitle: "8K SCENE BLUEPRINT"
+    scriptTitle: "TECHNICAL SCENE ANALYSIS",
+    ideaPlaceholder: "Briefly describe what you want to talk about...",
+    ideaBtn: "GIVE ME AN IDEA",
+    orText: "OR UPLOAD A VIDEO FOR AUDIT"
   }
 };
 
 export const PRICING_TIERS = [
   { id: 'starter', name: 'Starter Executive', price: '€0', credits: 3, features: ['Audit Video AI', 'Analisi Senior'], popular: false },
-  { id: 'pro', name: 'Pro Authority', price: '€49', credits: 50, features: ['Priorità Elaborazione', 'Script 8K'], popular: true },
+  { id: 'pro', name: 'Pro Authority', price: '€49', credits: 50, features: ['Priorità Elaborazione', 'Analisi Scene'], popular: true },
   { id: 'master', name: 'Master Strategic', price: '€99', credits: 150, features: ['White Label', 'Analisi Competitor'], popular: false }
 ];
