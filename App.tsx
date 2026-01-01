@@ -16,6 +16,7 @@ export default function App() {
   const [ownerMode, setOwnerMode] = useState(false);
 
   useEffect(() => {
+    // Modalità amministratore tramite URL hash
     if (window.location.hash === '#guerrino-admin') {
       setOwnerMode(true);
     }
@@ -37,7 +38,7 @@ export default function App() {
       }
     } catch (e: any) {
       console.error(e);
-      alert("AZIONE NON RIUSCITA: Errore di comunicazione con l'AI. Verifica la tua API KEY.");
+      alert("ERRORE: Assicurati di aver impostato l'API_KEY su Vercel nelle Environment Variables.");
     } finally {
       setLoading(false);
     }
@@ -50,7 +51,10 @@ export default function App() {
       <nav className="w-full glass p-6 rounded-[30px] flex justify-between items-center mb-12 sticky top-4 z-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black">SG</div>
-          <span className="font-black text-xs uppercase hidden sm:block">Master Authority</span>
+          <div className="flex flex-col">
+            <span className="font-black text-xs uppercase">Master Authority</span>
+            <span className="text-[8px] text-[#1087a0] font-black uppercase tracking-widest">Version 2.0.2</span>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-[10px] font-black uppercase tracking-widest text-white/70">
@@ -72,6 +76,7 @@ export default function App() {
              <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none text-white">
                STRATEGIC.<span className="text-[#a02a11]">AUDIT</span>
              </h1>
+             <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Analisi Video Senior con Intelligenza Artificiale</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
@@ -101,7 +106,7 @@ export default function App() {
                   onChange={e => e.target.files?.[0] && handleAnalyze(e.target.files[0])} 
                 />
               </label>
-              <p className="mt-6 text-[9px] text-gray-500 font-black uppercase tracking-widest">Formati supportati: MP4, MOV, WebM</p>
+              <p className="mt-6 text-[9px] text-gray-500 font-black uppercase tracking-widest">Analisi tecnica basata su 20 anni di esperienza</p>
             </div>
           )}
         </div>
@@ -111,6 +116,9 @@ export default function App() {
         <div className="py-32 text-center animate-pulse space-y-8">
            <div className="w-20 h-20 border-4 border-[#a02a11] border-t-transparent rounded-full animate-spin mx-auto"></div>
            <p className="font-black text-2xl uppercase italic tracking-tighter text-white/80">{t.processing}</p>
+           <div className="max-w-xs mx-auto text-[9px] text-gray-500 uppercase font-black tracking-widest leading-loose">
+             L'AI sta analizzando la ritenzione dei primi 3 secondi...
+           </div>
         </div>
       )}
 
