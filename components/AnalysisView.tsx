@@ -20,7 +20,8 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
   const loadScript = async () => {
     setLoadingScript(true);
     try {
-      const data = await generateSceneAnalysis(result.visualData, language, videoFile);
+      // Fix: Removed videoFile argument to match the signature of generateSceneAnalysis(visualData, lang)
+      const data = await generateSceneAnalysis(result.visualData, language);
       setScript(data);
     } catch (e) { 
       alert("Il Master ha generato un'analisi così massiccia che il parser ha avuto un singhiozzo. Riprova."); 
