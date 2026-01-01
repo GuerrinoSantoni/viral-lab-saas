@@ -11,41 +11,22 @@ const getAI = () => {
 };
 
 const SYSTEM_PROMPT = (platform: string, lang: string) => `
-  RUOLO: Sei un Senior Master Strategist con 20 anni di esperienza nel settore video e miliardi di views generate su tutte le piattaforme.
-  PIATTAFORMA TARGET: ${platform}. LINGUA: ${lang}.
+  RUOLO: Sei il "Senior Master Strategist", l'autorità massima nel panorama YouTube con 20 anni di esperienza. 
+  PIATTAFORMA: ${platform}. LINGUA: ${lang}.
   
-  MISSIONE: Analizza il video allegato come se fossi il consulente più costoso al mondo. Non essere gentile. Sii brutale, tecnico, analitico e focalizzato sul risultato economico e sulla viralità.
+  MISSIONE: Esegui un Deep Audit spietato del video. Analizza ritmo, hook, pacing e psicologia del click. 
+  Non essere gentile, sii professionale e critico. L'analisi deve valere migliaia di euro.
   
-  PARAMETRI DI VALUTAZIONE OBBLIGATORI:
-  1. HOOK (Gancio): I primi 3 secondi sono efficaci? Come distruggerebbero lo scrolling?
-  2. RITENZIONE: Il montaggio mantiene alta l'attenzione o è troppo lento?
-  3. COPY & CALL TO ACTION: Il testo è persuasivo o banale?
-  4. ANALISI TECNICA: Qualità video, audio, sottotitoli e color correction.
-  
-  OUTPUT RICHIESTO (FORMATO JSON):
-  - "score": Voto da 0 a 100 (solo l'eccellenza supera 80).
-  - "title": 3 Opzioni di titoli magnetici divisi da "|".
-  - "analysis": Almeno 150 parole di analisi critica senior.
-  - "caption": Un copy completo, pronto all'uso, ottimizzato per l'algoritmo (almeno 200 parole).
-  - "visualData": Suggerimenti tecnici di editing per migliorare il video.
-  - "platformSuggestion": Perché questo video funzionerà (o fallirà) sulla piattaforma selezionata.
-  - "ideaDuration": La durata ideale che questo video dovrebbe avere per massimizzare la retention.
+  FORMATO RISPOSTA (JSON):
+  - "score": Voto 0-100.
+  - "title": 3 Titoli magnetici separati da "|".
+  - "analysis": Almeno 200 parole di audit senior.
+  - "caption": Copy strategico (minimo 250 parole) con Hook > Story > CTA.
+  - "visualData": Direttive di editing tecnico per il montatore.
+  - "platformSuggestion": Strategia algoritmica specifica.
+  - "ideaDuration": Timing esatto consigliato.
+  - "hashtags": Array di tag virali.
 `;
-
-const RESPONSE_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    score: { type: Type.STRING },
-    title: { type: Type.STRING },
-    analysis: { type: Type.STRING },
-    caption: { type: Type.STRING },
-    hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
-    visualData: { type: Type.STRING },
-    platformSuggestion: { type: Type.STRING },
-    ideaDuration: { type: Type.STRING }
-  },
-  required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"]
-};
 
 export async function analyzeVideo(file: File, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
@@ -66,12 +47,25 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     },
     config: { 
       responseMimeType: "application/json", 
-      temperature: 0.5,
-      responseSchema: RESPONSE_SCHEMA 
+      temperature: 0.7,
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          score: { type: Type.STRING },
+          title: { type: Type.STRING },
+          analysis: { type: Type.STRING },
+          caption: { type: Type.STRING },
+          hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
+          visualData: { type: Type.STRING },
+          platformSuggestion: { type: Type.STRING },
+          ideaDuration: { type: Type.STRING }
+        },
+        required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"]
+      }
     }
   });
   
-  if (!response.text) throw new Error("Null response from AI");
+  if (!response.text) throw new Error("Null response");
   return JSON.parse(response.text);
 }
 
@@ -89,7 +83,7 @@ export async function generateSceneAnalysis(visualData: string, lang: Language, 
     contents: {
       parts: [
         { inlineData: { data: base64, mimeType: file.type } },
-        { text: `Analizza tecnicamente le scene di questo video basandoti su questa strategia: ${visualData}. Lingua: ${lang}. Genera un array JSON di oggetti Scene.` }
+        { text: `Analizza le scene di questo video basandoti su questa strategia: ${visualData}. Lingua: ${lang}. Restituisci un array JSON di oggetti Scene.` }
       ]
     },
     config: { 
