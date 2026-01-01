@@ -10,10 +10,15 @@ const getAI = () => {
 };
 
 const SYSTEM_PROMPT_BASE = (platform: string, lang: string) => `
-  Sei un Senior YouTuber Master Strategist con 20 anni di esperienza.
-  Piattaforma: ${platform}. Lingua: ${lang}.
-  Analizza il contenuto (video o idea) e fornisci una strategia di crescita virale.
-  Sii diretto, critico e fornisci una caption pronta all'uso di almeno 150 parole con hook e CTA.
+  RUOLO: Sei un Senior YouTuber Master Strategist con 20 anni di esperienza nel settore dei media digitali.
+  PIATTAFORMA: ${platform}. LINGUA: ${lang}.
+  MISSIONE: Analizza il video fornito con occhio clinico e spietato. Non limitarti a una descrizione superficiale.
+  REQUISITI REPORT:
+  - "score": Un voto da 0 a 100 basato sul potenziale virale reale.
+  - "title": Un titolo magnetico e ottimizzato per l'algoritmo.
+  - "analysis": Un commento senior, tecnico e strategico (max 300 caratteri).
+  - "caption": Una descrizione completa di almeno 200 parole, con storytelling, hook psicologici e CTA multiple.
+  - "visualData": Spiegazione della strategia visiva e del montaggio necessario.
 `;
 
 const RESPONSE_SCHEMA = {
@@ -40,18 +45,20 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     reader.onerror = reject;
   });
   
-  // Utilizziamo gemini-3-flash-preview per gestire payload fino a 40MB con maggiore stabilità
+  // Utilizziamo gemini-3-pro-preview per la massima qualità di analisi "Senior"
+  // Questo modello è più potente nel comprendere sfumature in video pesanti
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3-pro-preview',
     contents: {
       parts: [
-        { text: SYSTEM_PROMPT_BASE(platform, lang) + " Analizza ogni dettaglio di questo video. Sii estremamente specifico nella caption." },
+        { text: SYSTEM_PROMPT_BASE(platform, lang) + " Esegui un audit integrale e profondo di questo video. Non tralasciare nulla." },
         { inlineData: { data: base64, mimeType: file.type } }
       ]
     },
     config: { 
       responseMimeType: "application/json", 
-      temperature: 0.7, 
+      temperature: 0.8,
+      thinkingConfig: { thinkingBudget: 4000 }, // Riserviamo budget per il ragionamento strategico
       responseSchema: RESPONSE_SCHEMA 
     }
   });
@@ -61,10 +68,10 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
 export async function analyzePrompt(prompt: string, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3-pro-preview',
     contents: {
       parts: [
-        { text: SYSTEM_PROMPT_BASE(platform, lang) + ` Crea la migliore strategia per questa idea: "${prompt}".` }
+        { text: SYSTEM_PROMPT_BASE(platform, lang) + ` Sviluppa una strategia master per questa idea: "${prompt}".` }
       ]
     },
     config: { 
@@ -91,15 +98,15 @@ export async function generateScriptOnly(visualData: string, lang: Language, fil
   }
 
   contentParts.push({
-    text: `Genera un'analisi tecnica scena per scena (JSON array). Basati sulla strategia: ${visualData}. Lingua: ${lang}.`
+    text: `Analisi tecnica fotogramma per fotogramma. Strategia: ${visualData}. Lingua: ${lang}. Genera JSON array.`
   });
   
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3-pro-preview',
     contents: { parts: contentParts },
     config: { 
       responseMimeType: "application/json",
-      temperature: 0.7,
+      temperature: 0.5,
       responseSchema: {
         type: Type.ARRAY,
         items: {
