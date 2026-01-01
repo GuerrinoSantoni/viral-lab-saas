@@ -9,7 +9,14 @@ const getAI = () => {
 };
 
 function cleanJSON(text: string): string {
-  return text.replace(/```json/g, '').replace(/```/g, '').trim();
+  if (!text) return "{}";
+  let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start !== -1 && end !== -1) {
+    cleaned = cleaned.substring(start, end + 1);
+  }
+  return cleaned;
 }
 
 export async function analyzeVideo(
@@ -20,55 +27,43 @@ export async function analyzeVideo(
 ): Promise<AnalysisResult> {
   const ai = getAI();
   
-  // 0. Conversione in base64
-  onProgress?.("Conversione video in corso...");
-  const base64 = await new Promise<string>((resolve) => {
+  onProgress?.("Conversione video...");
+  const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve((reader.result as string).split(',')[1]);
+    reader.onerror = reject;
   });
 
-  // FASE 1: SCANSIONE TECNICA (Leggera per evitare Error 500)
-  onProgress?.("Fase 1: Scansione visiva del Master...");
+  // FASE 1: ANALISI VISIVA CON GEMINI 3 PRO (Più stabile per input binari)
+  onProgress?.("Fase 1: Il Master sta guardando il video...");
   const scanResponse = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3-pro-preview', // MODELLO PRO PER STABILITÀ VIDEO
     contents: {
       parts: [
-        { text: "Analizza tecnicamente questo video. Descrivi nel dettaglio: cosa succede, la qualità delle luci, l'audio, il ritmo del montaggio, il carisma della persona (se presente) e il contenuto espresso. Sii estremamente prolisso." },
-        { inlineData: { data: base64, mimeType: file.type } }
+        { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
+        { text: "Analizza questo video come un produttore senior. Descrivi ogni dettaglio: contenuto, tecnica, audio e carisma. Sii estremamente prolisso." }
       ]
     },
-    config: { temperature: 0.1 }
+    config: { 
+      temperature: 0.1,
+      systemInstruction: "Sei un produttore video senior con 20 anni di esperienza, esperto in viralità."
+    }
   });
 
   const technicalReport = scanResponse.text;
-  if (!technicalReport) throw new Error("Il Master non ha fornito dati sulla scansione.");
+  if (!technicalReport) throw new Error("Scansione fallita.");
 
-  // FASE 2: ELABORAZIONE SENIOR (Testo -> Strategia)
-  onProgress?.("Fase 2: Elaborazione della strategia spietata...");
+  // FASE 2: ELABORAZIONE STRATEGICA (Testo -> JSON)
+  onProgress?.("Fase 2: Generazione strategia senior...");
   const finalResponse = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview', // Flash è più veloce per il parsing finale
-    contents: {
-      parts: [
-        { text: `AGISCI COME UN PRODUTTORE SENIOR (20 ANNI EXP). 
-        Usa questo report tecnico di un video per creare una strategia per ${platform} in ${lang}:
-        
-        REPORT TECNICO:
-        ${technicalReport}
-        
-        RESTITUISCI UN OGGETTO JSON:
-        {
-          "score": "voto 0-100",
-          "title": "3 titoli magnetici | separati",
-          "analysis": "audit tecnico spietato di 500+ parole",
-          "caption": "copy persuasivo",
-          "hashtags": ["tag1", "tag2"],
-          "visualData": "dati per storyboard",
-          "platformSuggestion": "consigli algoritmo",
-          "ideaDuration": "minutaggio"
-        }` }
-      ]
-    },
+    model: 'gemini-3-flash-preview',
+    contents: `AGISCI COME UN PRODUTTORE SENIOR. Crea una strategia spietata per ${platform} in ${lang} basandoti su questo report:
+    
+    ${technicalReport}
+    
+    RESTITUISCI SOLO UN JSON CON:
+    "score" (0-100), "title" (3 titoli |), "analysis" (audit 500 parole), "caption" (copy), "hashtags" (array), "visualData" (descrizione per storyboard), "platformSuggestion" (algoritmo), "ideaDuration" (tempo).`,
     config: { 
       responseMimeType: "application/json",
       temperature: 0.7 
@@ -82,36 +77,34 @@ export async function generateIdea(prompt: string, platform: Platform, lang: Lan
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: {
-      parts: [
-        { text: `Genera una strategia VIRALE Senior (20 anni exp) per ${platform} in ${lang}. Idea: "${prompt}".` }
-      ]
-    },
+    contents: `Strategia virale senior per ${platform} in ${lang}. Idea: "${prompt}".`,
     config: { 
       responseMimeType: "application/json", 
-      temperature: 0.7,
-      thinkingConfig: { thinkingBudget: 4000 }
+      temperature: 0.7
     }
   });
-  
   return JSON.parse(cleanJSON(response.text || "{}"));
 }
 
 export async function generateSceneAnalysis(visualData: string, lang: Language, file?: File): Promise<Scene[]> {
   const ai = getAI();
-  const parts: any[] = [{ 
-    text: `CREA STORYBOARD SENIOR (20 ANNI EXP). 
-    REGOLE: 5-10 scene. Descrizione e AudioSFX > 100 parole per scena. Lingua: ${lang}. 
-    DATI VIDEO: ${visualData}` 
-  }];
+  let parts: any[] = [{ text: `Crea storyboard senior in ${lang} basato su: ${visualData}` }];
   
+  if (file) {
+    const base64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+    });
+    parts.unshift({ inlineData: { data: base64, mimeType: file.type || "video/mp4" } });
+  }
+
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: { parts },
     config: { 
       responseMimeType: "application/json",
-      temperature: 0.2,
-      thinkingConfig: { thinkingBudget: 16000 }
+      temperature: 0.2
     }
   });
 
