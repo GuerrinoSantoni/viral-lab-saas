@@ -7,7 +7,7 @@ import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
-const MAX_FILE_SIZE_MB = 50; 
+const MAX_FILE_SIZE_MB = 15; // Ridotto per stabilità browser-side
 
 export default function App() {
   const [lang] = useState<Language>('IT');
@@ -24,16 +24,20 @@ export default function App() {
   const handleAnalyzeVideo = async (file: File) => {
     if (!platform) return alert("Seleziona una piattaforma!");
     
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      return alert(`File troppo grande. Per l'analisi immediata via browser il limite è ${MAX_FILE_SIZE_MB}MB. Comprimi il video e riprova.`);
+    }
+
     setLoading(true);
-    setStatus("Inizializzazione Master Audit...");
+    setStatus("Connessione ai server Master...");
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
       setResult(res);
       setCredits(prev => prev - 1);
     } catch (e: any) {
-      console.error("CRITICAL_ERROR:", e);
-      alert(`ERRORE: Il server Google ha riscontrato un problema interno. Prova a comprimere il video o riprova tra qualche minuto. L'API di analisi video è attualmente sotto carico pesante.`);
+      console.error("ERROR:", e);
+      alert(`Il server ha rifiutato il video. Questo accade se il video ha un formato non supportato o se i server Google sono sovraccarichi. Riprova con un video più breve o in formato MP4 standard.`);
     } finally {
       setLoading(false);
       setStatus("");
@@ -99,8 +103,8 @@ export default function App() {
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all">
                     <div className="text-6xl">📽️</div>
-                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica per l'Audit a due fasi</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Procedura Senior Garantita • Max {MAX_FILE_SIZE_MB}MB</span>
+                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video (Max {MAX_FILE_SIZE_MB}MB)</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Audit Senior Istantaneo • MP4/MOV</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
