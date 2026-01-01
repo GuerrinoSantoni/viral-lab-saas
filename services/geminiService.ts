@@ -10,6 +10,7 @@ const getAI = () => {
   return new GoogleGenAI({ apiKey });
 };
 
+// Helper per pulire l'output JSON del modello
 function cleanJSON(text: string): string {
   if (!text) return "{}";
   let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -21,6 +22,9 @@ function cleanJSON(text: string): string {
   return cleaned;
 }
 
+// Funzione di utilità per gestire i ritardi (retry)
+const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
+
 export async function analyzeVideo(
   file: File, 
   platform: Platform, 
@@ -29,7 +33,7 @@ export async function analyzeVideo(
 ): Promise<AnalysisResult> {
   const ai = getAI();
   
-  onProgress?.("Codifica video in corso...");
+  onProgress?.("Preparazione pacchetto dati...");
   const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -37,65 +41,91 @@ export async function analyzeVideo(
     reader.onerror = reject;
   });
 
-  // FASE 1: SCANSIONE TECNICA (Evita timeout perché la risposta è veloce)
-  onProgress?.("Fase 1: Scansione visiva rapida...");
-  const scanResponse = await ai.models.generateContent({
-    model: MODEL_NAME,
-    contents: [{
-      parts: [
-        { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: "Descrivi questo video in modo estremamente dettagliato dal punto di vista tecnico: scene, movimenti di camera, audio, espressioni del volto e qualità visiva. Sii molto analitico." }
-      ]
-    }]
-  });
+  onProgress?.("Audit Master in corso (Flash Mode)...");
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: [{
+        parts: [
+          { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
+          { text: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA.
+            Analizza questo video per la piattaforma ${platform} in lingua ${lang}.
+            
+            ESEGUI UN AUDIT PROFESSIONALE COMPLETO:
+            1. Viral Score (0-100).
+            2. 3 Titoli Magnetici.
+            3. Analisi tecnica spietata (min 300 parole).
+            4. Copy persuasivo con hashtag.
+            5. Briefing visivo per storyboard.
 
-  const technicalDescription = scanResponse.text;
-  if (!technicalDescription) throw new Error("Impossibile analizzare il video. Prova un file più leggero.");
+            RISPONDI ESCLUSIVAMENTE CON QUESTO JSON:
+            {
+              "score": "voto",
+              "title": "Titoli | separati | da pipe",
+              "analysis": "audit senior testuale dettagliato",
+              "caption": "copy caption",
+              "hashtags": ["tag1", "tag2"],
+              "visualData": "briefing visivo per storyboard",
+              "platformSuggestion": "consigli algoritmo",
+              "ideaDuration": "durata ideale"
+            }` 
+          }
+        ]
+      }],
+      config: { 
+        responseMimeType: "application/json"
+      }
+    });
 
-  // FASE 2: AUDIT STRATEGICO (Usa la descrizione testuale, è istantaneo e sicuro)
-  onProgress?.("Fase 2: Elaborazione strategia Master...");
-  const finalResponse = await ai.models.generateContent({
-    model: MODEL_NAME,
-    contents: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA.
-      Analizza questa descrizione tecnica di un video e crea una strategia per ${platform} in ${lang}.
-      
-      DESCRIZIONE VIDEO:
-      ${technicalDescription}
-
-      RESTITUISCI ESCLUSIVAMENTE UN OGGETTO JSON:
-      {
-        "score": "voto virale 0-100",
-        "title": "3 Titoli Magnetici | divisi da pipe",
-        "analysis": "Audit senior di almeno 400 parole con consigli spietati sul montaggio e la comunicazione",
-        "caption": "Copy persuasivo con ganci psicologici",
-        "hashtags": ["tag1", "tag2"],
-        "visualData": "briefing visivo per il montatore",
-        "platformSuggestion": "trucco per l'algoritmo attuale",
-        "ideaDuration": "durata ideale suggerita"
-      }`,
-    config: { 
-      responseMimeType: "application/json"
+    return JSON.parse(cleanJSON(response.text || "{}"));
+  } catch (error: any) {
+    if (error.message?.includes("429")) {
+      throw new Error("QUOTA_EXCEEDED");
     }
-  });
-
-  return JSON.parse(cleanJSON(finalResponse.text || "{}"));
+    throw error;
+  }
 }
 
 export async function generateIdea(prompt: string, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
-  const response = await ai.models.generateContent({
-    model: MODEL_NAME,
-    contents: `Genera una strategia senior (20y exp) per ${platform} in ${lang}. Idea: "${prompt}". Rispondi in JSON.`,
-    config: { responseMimeType: "application/json" }
-  });
-  return JSON.parse(cleanJSON(response.text || "{}"));
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA.
+        Crea una strategia virale completa per ${platform} in lingua ${lang} basata su questa idea: "${prompt}".
+        
+        RISPONDI ESCLUSIVAMENTE CON QUESTO OGGETTO JSON:
+        {
+          "score": "potenziale virale 0-100",
+          "title": "3 Titoli Magnetici | separati da pipe",
+          "analysis": "Strategia dettagliata di almeno 300 parole su come realizzare il contenuto",
+          "caption": "Copy pronto per il post",
+          "hashtags": ["tag1", "tag2"],
+          "visualData": "Descrizione visiva per il montaggio",
+          "platformSuggestion": "Suggerimento per l'algoritmo",
+          "ideaDuration": "Durata video consigliata"
+        }`,
+      config: { 
+        responseMimeType: "application/json"
+      }
+    });
+    
+    return JSON.parse(cleanJSON(response.text || "{}"));
+  } catch (error: any) {
+    if (error.message?.includes("429")) {
+      throw new Error("QUOTA_EXCEEDED");
+    }
+    throw error;
+  }
 }
 
 export async function generateSceneAnalysis(visualData: string, lang: Language): Promise<Scene[]> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: `Crea uno storyboard tecnico in ${lang} basato su: ${visualData}. Genera un array JSON di 8 scene.`,
+    contents: `Basandoti su questo briefing: ${visualData}, crea uno storyboard tecnico in ${lang}. Restituisci un array JSON di oggetti con scene, description, audioSFX, duration.`,
     config: { responseMimeType: "application/json" }
   });
   return JSON.parse(cleanJSON(response.text || "[]"));
