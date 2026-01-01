@@ -23,11 +23,11 @@ export default function App() {
   const [credits, setCredits] = useState(10);
 
   const loadingMessages = [
-    "Caricamento file nel motore Flash...",
-    "Analisi dei metadati video...",
-    "Il Master sta osservando i frame...",
-    "Elaborazione report senior in corso...",
-    "Quasi pronto, sto scrivendo l'audit spietato..."
+    "Stabilizzazione connessione sicura...",
+    "Invio dati al Master Strategist...",
+    "Analisi dei frame in corso (richiede tempo)...",
+    "Il Master sta scrivendo l'audit tecnico...",
+    "Sintetizzazione strategia senior..."
   ];
 
   useEffect(() => {
@@ -35,14 +35,13 @@ export default function App() {
     if (loading) {
       interval = setInterval(() => {
         setLoadingStep(prev => (prev + 1) % loadingMessages.length);
-      }, 3000); 
+      }, 5000); 
     }
     return () => clearInterval(interval);
   }, [loading]);
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Scegli prima la piattaforma!");
-    if (file.size > MAX_FILE_SIZE_BYTES) return alert(`File troppo grande. Massimo ${MAX_FILE_SIZE_MB}MB.`);
+    if (!platform) return alert("Seleziona una piattaforma!");
     
     setLoading(true);
     setLoadingStep(0);
@@ -52,20 +51,15 @@ export default function App() {
       setResult(res);
       setCredits(prev => prev - 1);
     } catch (e: any) {
-      console.error(e);
-      const errorMsg = e.message || "Errore ignoto";
-      if (errorMsg.includes("Requested entity was not found")) {
-        alert("Errore del server Google (Modello non trovato). Riprova tra un istante.");
-      } else {
-        alert(`ERRORE MASTER: ${errorMsg}. Se il file è molto pesante, prova a comprimerlo.`);
-      }
+      console.error("ANALYSIS_ERROR:", e);
+      alert(`ERRORE DI CARICAMENTO: Il server ha rifiutato la richiesta. Se il video è vicino ai 50MB, prova a comprimerlo leggermente o usa un formato più standard (MP4).`);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGenerateIdea = async () => {
-    if (!platform) return alert("Scegli prima la piattaforma!");
+    if (!platform) return alert("Seleziona una piattaforma!");
     if (!ideaText.trim()) return alert("Scrivi di cosa vuoi parlare!");
     
     setLoading(true);
@@ -75,7 +69,7 @@ export default function App() {
       setResult(res);
       setCredits(prev => prev - 1);
     } catch (e: any) {
-      alert(`Errore generazione idea: ${e.message}`);
+      alert(`Errore: ${e.message}`);
     } finally {
       setLoading(false);
     }
@@ -88,7 +82,7 @@ export default function App() {
       <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-12 shadow-2xl premium-border">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black">SG</div>
-          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block">Senior Authority 20Y</span>
+          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Audit Tool</span>
         </div>
         <div className="flex items-center gap-6">
           <span className="text-[10px] font-black uppercase text-gray-400">{t.credits}: {credits}</span>
@@ -122,8 +116,8 @@ export default function App() {
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all">
                     <div className="text-6xl">📽️</div>
-                    <span className="text-xl font-black uppercase tracking-tighter">Carica Video per l'Audit Senior</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Max {MAX_FILE_SIZE_MB}MB • Analisi spietata</span>
+                    <span className="text-xl font-black uppercase tracking-tighter">Analisi Senior di COSA SUCCEDE nel video</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Max {MAX_FILE_SIZE_MB}MB • Risultati garantiti</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -132,7 +126,7 @@ export default function App() {
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Descrivi la tua idea..."
+                    placeholder="Descrivi la tua idea per la strategia virale..."
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
                   <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all">Genera Strategia</button>
@@ -148,6 +142,7 @@ export default function App() {
             <p className="text-2xl font-black uppercase italic tracking-tighter text-white animate-pulse">
               {loadingMessages[loadingStep]}
             </p>
+            <p className="text-[9px] text-gray-500 uppercase tracking-widest">Per file da 10MB+ l'analisi può richiedere fino a 60 secondi.</p>
           </div>
         )}
 
