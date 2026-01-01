@@ -14,6 +14,7 @@ export default function App() {
   const [platform, setPlatform] = useState<Platform | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [lastFile, setLastFile] = useState<File | null>(null);
   const [showPricing, setShowPricing] = useState(false);
   const [credits, setCredits] = useState(3);
   const [ownerMode, setOwnerMode] = useState(false);
@@ -43,6 +44,7 @@ export default function App() {
     if (!checkCredits()) return;
     
     setLoading(true);
+    setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang);
       setResult(res);
@@ -51,8 +53,6 @@ export default function App() {
       console.error("Analysis Error:", e);
       if (e.message?.includes("API_KEY_MISSING")) {
         alert("ERRORE: Configura la tua API_KEY nelle variabili d'ambiente.");
-      } else if (file.size > 20 * 1024 * 1024) {
-        alert("ERRORE: Il file potrebbe essere troppo grande per l'invio diretto all'AI. Prova con un video inferiore a 20MB o comprimilo.");
       } else {
         alert("ERRORE DI SISTEMA: Si è verificato un problema durante l'analisi. Riprova più tardi.");
       }
@@ -67,6 +67,7 @@ export default function App() {
     if (!checkCredits()) return;
 
     setLoading(true);
+    setLastFile(null); // Reset file if it's a prompt analysis
     try {
       const res = await analyzePrompt(textInput, platform, lang);
       setResult(res);
@@ -121,7 +122,6 @@ export default function App() {
 
             <div className={`w-full max-w-2xl mx-auto space-y-8 transition-all duration-700 ${platform ? 'opacity-100 translate-y-0' : 'opacity-20 blur-sm pointer-events-none'}`}>
               
-              {/* Text Input Section */}
               <div className="glass p-8 rounded-[40px] border border-white/10 space-y-6">
                 <textarea 
                   value={textInput}
@@ -143,7 +143,6 @@ export default function App() {
                 <div className="h-px flex-1 bg-white/10"></div>
               </div>
 
-              {/* Video Upload Section */}
               <label className="relative inline-block group cursor-pointer w-full">
                 <div className="absolute -inset-1 bg-gradient-to-r from-[#a02a11] to-[#1087a0] rounded-[40px] blur opacity-10 group-hover:opacity-40 transition duration-1000"></div>
                 <div className="relative glass p-10 rounded-[40px] border border-white/10 flex items-center justify-center gap-8 group-hover:bg-white/5 transition-all">
@@ -171,7 +170,12 @@ export default function App() {
         )}
 
         {result && !loading && (
-          <AnalysisView result={result} language={lang} onReset={() => {setResult(null); setPlatform(null); setTextInput("");}} />
+          <AnalysisView 
+            result={result} 
+            videoFile={lastFile || undefined}
+            language={lang} 
+            onReset={() => {setResult(null); setPlatform(null); setTextInput(""); setLastFile(null);}} 
+          />
         )}
       </main>
 
