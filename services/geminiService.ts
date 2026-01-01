@@ -10,13 +10,12 @@ const getAI = () => {
 };
 
 const SYSTEM_PROMPT_BASE = (platform: string, lang: string) => `
-  Sei un Senior YouTuber Master Strategist con 20 anni di esperienza e 500M di views totali.
-  Piattaforma: ${platform}. Lingua: ${lang}. Sii spietato, tecnico e focalizzato sul business.
-
-  REQUISITI MANDATORI PER IL RISULTATO:
-  1. "caption": Deve essere un testo strategico di ALMENO 150 PAROLE. Struttura: Hook shock, Body con storytelling profondo, curiosity gap e CTA multipla potente. Non essere sintetico.
-  2. "visualData": IDEA CREATIVA DETTAGLIATA (Visione artistica, ritmo, montaggio). Spiega il PERCHÉ tecnico di ogni scelta.
-  3. "analysis": Insight tecnico senior (max 250 caratteri).
+  Sei un Senior YouTuber Master Strategist con 20 anni di esperienza.
+  Piattaforma: ${platform}. Lingua: ${lang}.
+  REQUISITI:
+  1. "caption": Almeno 150 parole, hook potente, storytelling e CTA.
+  2. "visualData": Idea creativa e tecnica dettagliata.
+  3. "analysis": Insight senior (max 250 caratteri).
 `;
 
 const RESPONSE_SCHEMA = {
@@ -43,15 +42,20 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     reader.onerror = reject;
   });
   
+  // Utilizziamo gemini-flash-latest per l'analisi video per maggiore stabilità con i file
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-flash-latest',
     contents: {
       parts: [
-        { text: SYSTEM_PROMPT_BASE(platform, lang) + " Analizza questo video esistente e dimmi come migliorarlo per renderlo virale. Sii estremamente prolisso nella caption." },
+        { text: SYSTEM_PROMPT_BASE(platform, lang) + " Analizza il video allegato. Sii critico e prolisso nella caption." },
         { inlineData: { data: base64, mimeType: file.type } }
       ]
     },
-    config: { responseMimeType: "application/json", temperature: 0.9, responseSchema: RESPONSE_SCHEMA }
+    config: { 
+      responseMimeType: "application/json", 
+      temperature: 0.7, 
+      responseSchema: RESPONSE_SCHEMA 
+    }
   });
   return JSON.parse(response.text || "{}");
 }
@@ -62,7 +66,7 @@ export async function analyzePrompt(prompt: string, platform: Platform, lang: La
     model: 'gemini-3-flash-preview',
     contents: {
       parts: [
-        { text: SYSTEM_PROMPT_BASE(platform, lang) + ` Crea da zero una strategia virale basandoti su questo input: "${prompt}". La caption deve superare le 150 parole.` }
+        { text: SYSTEM_PROMPT_BASE(platform, lang) + ` Crea una strategia per: "${prompt}".` }
       ]
     },
     config: { responseMimeType: "application/json", temperature: 1.0, responseSchema: RESPONSE_SCHEMA }
@@ -72,7 +76,6 @@ export async function analyzePrompt(prompt: string, platform: Platform, lang: La
 
 export async function generateScriptOnly(visualData: string, lang: Language, file?: File): Promise<Scene[]> {
   const ai = getAI();
-  
   let contentParts: any[] = [];
   
   if (file) {
@@ -82,30 +85,15 @@ export async function generateScriptOnly(visualData: string, lang: Language, fil
       reader.onload = () => resolve((reader.result as string).split(',')[1]);
       reader.onerror = reject;
     });
-    
-    contentParts.push({
-      inlineData: { data: base64, mimeType: file.type }
-    });
-    
-    contentParts.push({
-      text: `AUDIT REALE DELLE SCENE. Analizza i fotogrammi di QUESTO VIDEO specifico.
-      Basandoti su questa strategia: "${visualData}", scrivi un'analisi tecnica scena per scena del video che vedi. 
-      Sii estremamente critico: descrivi cosa succede realmente e come deve cambiare tecnicamente.
-      
-      REQUISITO DI LUNGHEZZA: Ogni singola "description" DEVE avere ALMENO 100 PAROLE. 
-      Descrivi inquadrature, espressioni, testi a video e movimenti di camera reali.
-      Lingua: ${lang}. Rispondi in formato JSON.`
-    });
-  } else {
-    contentParts.push({
-      text: `Crea un'analisi tecnica delle scene basata su questa idea: "${visualData}". 
-      Ogni singola "description" DEVE avere ALMENO 100 PAROLE. 
-      Lingua: ${lang}. Rispondi in formato JSON.`
-    });
+    contentParts.push({ inlineData: { data: base64, mimeType: file.type } });
   }
+
+  contentParts.push({
+    text: `Genera un'analisi tecnica scena per scena (JSON array). Strategia: ${visualData}. Lingua: ${lang}.`
+  });
   
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-flash-latest',
     contents: { parts: contentParts },
     config: { 
       responseMimeType: "application/json",
@@ -126,13 +114,5 @@ export async function generateScriptOnly(visualData: string, lang: Language, fil
     }
   });
 
-  const text = response.text;
-  if (!text) throw new Error("Empty response from AI");
-  
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    console.error("Failed to parse JSON:", text);
-    throw new Error("JSON parsing failed");
-  }
+  return JSON.parse(response.text || "[]");
 }
