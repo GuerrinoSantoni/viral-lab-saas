@@ -77,24 +77,25 @@ export async function generateScriptOnly(visualData: string, lang: Language): Pr
   
   REQUISITO DI LUNGHEZZA CRITICO: 
   Ogni singola "description" di ogni scena DEVE contenere ALMENO 100 PAROLE. 
-  Descrivi ogni dettaglio: inquadratura, movimenti di camera, espressioni, colori, scritte a video, ritmi di taglio.
-  Ogni "audioSFX" deve descrivere dettagliatamente il sound design (musica, effetti, toni di voce).
+  Sii logorroico, ultra-dettagliato e prolisso. Descrivi inquadratura, movimenti, espressioni, colori, grafiche e tagli.
+  Ogni "audioSFX" deve descrivere dettagliatamente il sound design (musica, toni, effetti).
   
-  Genera 5-7 scene. Non accettare risposte brevi. Sii logorroico e ultra-tecnico.`;
+  Genera 5-7 scene numerate. Rispondi SOLO con il JSON richiesto dallo schema.`;
   
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview', // Passiamo al modello Pro per gestire meglio il requisito di lunghezza estrema
+    model: 'gemini-3-flash-preview',
     contents: { parts: [{ text: prompt }] },
     config: { 
       responseMimeType: "application/json",
+      temperature: 0.7,
       responseSchema: {
         type: Type.ARRAY,
         items: {
           type: Type.OBJECT,
           properties: {
             scene: { type: Type.INTEGER },
-            description: { type: Type.STRING, description: "Descrizione visiva tecnica di oltre 100 parole" },
-            audioSFX: { type: Type.STRING, description: "Sound design dettagliato" },
+            description: { type: Type.STRING },
+            audioSFX: { type: Type.STRING },
             duration: { type: Type.STRING }
           },
           required: ["scene", "description", "audioSFX", "duration"]
@@ -102,5 +103,14 @@ export async function generateScriptOnly(visualData: string, lang: Language): Pr
       }
     }
   });
-  return JSON.parse(response.text || "[]");
+
+  const text = response.text;
+  if (!text) throw new Error("Empty response from AI");
+  
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("Failed to parse JSON:", text);
+    throw new Error("JSON parsing failed");
+  }
 }
