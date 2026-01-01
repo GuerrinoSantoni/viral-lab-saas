@@ -6,9 +6,9 @@ import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
-const MAX_FILE_SIZE_MB = 40;
+const MAX_FILE_SIZE_MB = 25; // Ridotto per sicurezza
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-const API_SAFE_LIMIT_MB = 20;
+const API_SAFE_LIMIT_MB = 15;
 const API_SAFE_LIMIT_BYTES = API_SAFE_LIMIT_MB * 1024 * 1024;
 
 export default function App() {
@@ -40,11 +40,11 @@ export default function App() {
     if (!platform) return alert("Seleziona prima una piattaforma.");
     
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return alert(`FILE TROPPO GRANDE: Il limite massimo dell'app è ${MAX_FILE_SIZE_MB}MB.`);
+      return alert(`VIDEO TROPPO PESANTE: Il limite massimo è ${MAX_FILE_SIZE_MB}MB per garantire l'analisi. Comprimilo.`);
     }
 
     if (file.size > API_SAFE_LIMIT_BYTES) {
-      const proceed = confirm(`ATTENZIONE: Il video è di ${(file.size / (1024 * 1024)).toFixed(1)}MB. Il limite tecnico per l'analisi AI fluida è di ${API_SAFE_LIMIT_MB}MB. L'invio potrebbe fallire o andare in timeout. Vuoi tentare comunque o preferisci comprimerlo?`);
+      const proceed = confirm(`Il video è di ${(file.size / (1024 * 1024)).toFixed(1)}MB. I server AI spesso falliscono sopra i 15MB. Se ricevi un errore 500, comprimi il video sotto i 10MB. Vuoi tentare?`);
       if (!proceed) return;
     }
 
@@ -57,12 +57,14 @@ export default function App() {
       setResult(res);
       if (!ownerMode) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      console.error("Detailed Error:", e);
-      if (e.message?.includes("API_KEY_MISSING")) {
-        alert("ERRORE: API_KEY non trovata nelle impostazioni di sistema.");
-      } else {
-        alert(`ERRORE DI ELABORAZIONE: ${e.message || "Il server AI non ha risposto. Potrebbe essere dovuto alla dimensione del file. Prova con un video più leggero (max 20MB consigliati)."}`);
+      console.error("AI Error:", e);
+      let errorMsg = "Errore di connessione con l'AI.";
+      if (e.message?.includes("500")) {
+        errorMsg = "ERRORE 500: Il video è troppo pesante per i server di Google o il formato non è supportato. Prova a comprimerlo sotto i 10MB.";
+      } else if (e.message?.includes("API_KEY")) {
+        errorMsg = "ERRORE: API_KEY non configurata correttamente.";
       }
+      alert(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -156,7 +158,7 @@ export default function App() {
                   <div className="text-4xl group-hover:scale-110 transition-transform duration-500">📥</div>
                   <div className="text-left">
                     <span className="block text-xs font-black uppercase tracking-[0.3em] text-white">Upload Video Audit</span>
-                    <span className="block text-[9px] font-black uppercase tracking-widest text-gray-500 italic">Max {MAX_FILE_SIZE_MB}MB • Real Scene Audit</span>
+                    <span className="block text-[9px] font-black uppercase tracking-widest text-gray-500 italic">Max {MAX_FILE_SIZE_MB}MB • Optimized Audit</span>
                   </div>
                 </div>
                 <input type="file" className="hidden" accept="video/*" onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
