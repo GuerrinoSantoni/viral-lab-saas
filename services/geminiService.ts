@@ -12,10 +12,8 @@ const getAI = () => {
 const SYSTEM_PROMPT_BASE = (platform: string, lang: string) => `
   Sei un Senior YouTuber Master Strategist con 20 anni di esperienza.
   Piattaforma: ${platform}. Lingua: ${lang}.
-  REQUISITI:
-  1. "caption": Almeno 150 parole, hook potente, storytelling e CTA.
-  2. "visualData": Idea creativa e tecnica dettagliata.
-  3. "analysis": Insight senior (max 250 caratteri).
+  Analizza il contenuto (video o idea) e fornisci una strategia di crescita virale.
+  Sii diretto, critico e fornisci una caption pronta all'uso di almeno 150 parole con hook e CTA.
 `;
 
 const RESPONSE_SCHEMA = {
@@ -42,12 +40,12 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     reader.onerror = reject;
   });
   
-  // Utilizziamo gemini-flash-latest per l'analisi video per maggiore stabilità con i file
+  // Utilizziamo gemini-3-flash-preview per gestire payload fino a 40MB con maggiore stabilità
   const response = await ai.models.generateContent({
-    model: 'gemini-flash-latest',
+    model: 'gemini-3-flash-preview',
     contents: {
       parts: [
-        { text: SYSTEM_PROMPT_BASE(platform, lang) + " Analizza il video allegato. Sii critico e prolisso nella caption." },
+        { text: SYSTEM_PROMPT_BASE(platform, lang) + " Analizza ogni dettaglio di questo video. Sii estremamente specifico nella caption." },
         { inlineData: { data: base64, mimeType: file.type } }
       ]
     },
@@ -66,10 +64,14 @@ export async function analyzePrompt(prompt: string, platform: Platform, lang: La
     model: 'gemini-3-flash-preview',
     contents: {
       parts: [
-        { text: SYSTEM_PROMPT_BASE(platform, lang) + ` Crea una strategia per: "${prompt}".` }
+        { text: SYSTEM_PROMPT_BASE(platform, lang) + ` Crea la migliore strategia per questa idea: "${prompt}".` }
       ]
     },
-    config: { responseMimeType: "application/json", temperature: 1.0, responseSchema: RESPONSE_SCHEMA }
+    config: { 
+      responseMimeType: "application/json", 
+      temperature: 1.0, 
+      responseSchema: RESPONSE_SCHEMA 
+    }
   });
   return JSON.parse(response.text || "{}");
 }
@@ -89,11 +91,11 @@ export async function generateScriptOnly(visualData: string, lang: Language, fil
   }
 
   contentParts.push({
-    text: `Genera un'analisi tecnica scena per scena (JSON array). Strategia: ${visualData}. Lingua: ${lang}.`
+    text: `Genera un'analisi tecnica scena per scena (JSON array). Basati sulla strategia: ${visualData}. Lingua: ${lang}.`
   });
   
   const response = await ai.models.generateContent({
-    model: 'gemini-flash-latest',
+    model: 'gemini-3-flash-preview',
     contents: { parts: contentParts },
     config: { 
       responseMimeType: "application/json",
