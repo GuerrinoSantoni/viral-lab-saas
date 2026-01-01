@@ -21,31 +21,30 @@ export default function App() {
   const [showPricing, setShowPricing] = useState(false);
   const [credits, setCredits] = useState(10);
 
+  const handleError = (e: any) => {
+    console.error("APP ERROR:", e);
+    if (e.message === "QUOTA_EXCEEDED") {
+      alert("⚠️ QUOTA ESAURITA (Errore 429)\nHai raggiunto il limite di richieste gratuite di Google Gemini.\n\nAttendi 60 secondi prima di riprovare oppure usa una chiave API con piano a pagamento (Pay-as-you-go).");
+    } else {
+      alert("ERRORE TECNICO\nIl sistema ha riscontrato un problema imprevisto. Riprova tra un istante.");
+    }
+  };
+
   const handleAnalyzeVideo = async (file: File) => {
     if (!platform) return alert("Seleziona una piattaforma!");
-    
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`File troppo pesante. Il limite stabile è ${MAX_FILE_SIZE_MB}MB.`);
+      return alert(`Limite: ${MAX_FILE_SIZE_MB}MB.`);
     }
 
     setLoading(true);
-    setStatus("Avvio caricamento sicuro...");
+    setStatus("Analisi Video in corso...");
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
       setResult(res);
       setCredits(prev => prev - 1);
     } catch (e: any) {
-      console.error("STABILITY ERROR:", e);
-      alert(`ERRORE DI TRASMISSIONE.
-Nonostante l'ottimizzazione, il server Google ha interrotto la connessione.
-
-CAUSE POSSIBILI:
-1. File troppo lungo (anche se leggero).
-2. Connessione internet instabile in upload.
-3. Formato video non supportato correttamente.
-
-CONSIGLIO: Se succede ancora con un file da 8MB, prova a convertirlo in MP4 a risoluzione più bassa (720p).`);
+      handleError(e);
     } finally {
       setLoading(false);
       setStatus("");
@@ -57,13 +56,13 @@ CONSIGLIO: Se succede ancora con un file da 8MB, prova a convertirlo in MP4 a ri
     if (!ideaText.trim()) return alert("Scrivi la tua idea!");
     
     setLoading(true);
-    setStatus("Generazione strategia creativa...");
+    setStatus("Analisi Strategica Idea...");
     try {
       const res = await generateIdea(ideaText, platform, lang);
       setResult(res);
       setCredits(prev => prev - 1);
     } catch (e: any) {
-      alert(`Errore: ${e.message}`);
+      handleError(e);
     } finally {
       setLoading(false);
       setStatus("");
@@ -76,7 +75,7 @@ CONSIGLIO: Se succede ancora con un file da 8MB, prova a convertirlo in MP4 a ri
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center bg-[#000] text-white">
       <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-12 shadow-2xl premium-border">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black">SG</div>
+          <div className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black shadow-[0_0_15px_#a02a11]">SG</div>
           <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Audit • 20Y Experience</span>
         </div>
         <div className="flex items-center gap-6">
@@ -109,22 +108,22 @@ CONSIGLIO: Se succede ancora con un file da 8MB, prova a convertirlo in MP4 a ri
             <div className={`w-full max-w-3xl mx-auto transition-all ${platform ? 'opacity-100' : 'opacity-50'}`}>
               {mode === 'VIDEO' ? (
                 <label className="cursor-pointer block">
-                  <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all">
-                    <div className="text-6xl">💎</div>
-                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica per Audit Senior (20MB)</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic text-center">Protocollo stabilità a due fasi attivo</span>
+                  <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
+                    <div className="text-6xl group-hover:scale-110 transition-transform">🚀</div>
+                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video (Max {MAX_FILE_SIZE_MB}MB)</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Feedback immediato con Gemini 3 Flash</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
               ) : (
-                <div className="glass p-12 rounded-[40px] space-y-8 border border-white/10">
+                <div className="glass p-12 rounded-[40px] space-y-8 border border-white/10 shadow-2xl">
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Descrivi la tua idea strategica..."
+                    placeholder="Descrivi la tua idea strategica in poche parole..."
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
-                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all">Genera Piano Master</button>
+                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">Analizza Strategia Idea</button>
                 </div>
               )}
             </div>
@@ -135,14 +134,14 @@ CONSIGLIO: Se succede ancora con un file da 8MB, prova a convertirlo in MP4 a ri
           <div className="py-24 flex flex-col items-center gap-10 text-center w-full animate-fadeIn max-w-xl">
             <div className="relative">
                <div className="w-32 h-32 border-[2px] border-[#a02a11]/20 border-t-[#a02a11] rounded-full animate-spin"></div>
-               <div className="absolute inset-0 flex items-center justify-center text-xs font-black uppercase italic text-[#a02a11] animate-pulse text-[8px]">Processing</div>
+               <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black uppercase italic text-[#a02a11] animate-pulse tracking-tighter">Gemini 3</div>
             </div>
             <div className="space-y-4">
               <p className="text-3xl font-black uppercase italic tracking-tighter text-white">
                 {status}
               </p>
               <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] font-black animate-pulse">
-                Sfruttando la potenza di Gemini 3 Flash
+                Elaborazione dati con tecnologia Flash
               </p>
             </div>
           </div>
