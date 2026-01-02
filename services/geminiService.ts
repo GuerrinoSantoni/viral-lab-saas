@@ -1,18 +1,19 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
-// Utilizziamo il modello STABILE che ha quote molto più alte rispetto ai preview
-const MODEL_NAME = 'gemini-flash-latest';
+// Utilizziamo Gemini 3 Flash: il motore più avanzato e veloce disponibile
+const MODEL_NAME = 'gemini-3-flash-preview';
 
 const getAI = () => {
   const apiKey = process.env.API_KEY;
-  if (!apiKey) throw new Error("API_KEY_MISSING");
+  if (!apiKey) throw new Error("API_KEY_MANCANTE: Verifica le impostazioni di Vercel.");
   return new GoogleGenAI({ apiKey });
 };
 
 function cleanJSON(text: string): string {
   if (!text) return "{}";
+  // Rimuove markdown e spazi superflui
   let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
   const start = cleaned.indexOf('{');
   const end = cleaned.lastIndexOf('}');
@@ -20,21 +21,6 @@ function cleanJSON(text: string): string {
     cleaned = cleaned.substring(start, end + 1);
   }
   return cleaned;
-}
-
-/**
- * Esegue l'analisi con un sistema di retry automatico in caso di errore 429
- */
-async function callWithRetry(fn: () => Promise<any>, retries = 2, delay = 2000): Promise<any> {
-  try {
-    return await fn();
-  } catch (error: any) {
-    if (retries > 0 && (error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED"))) {
-      await new Promise(res => setTimeout(res, delay));
-      return callWithRetry(fn, retries - 1, delay * 2);
-    }
-    throw error;
-  }
 }
 
 export async function analyzeVideo(
@@ -45,75 +31,75 @@ export async function analyzeVideo(
 ): Promise<AnalysisResult> {
   const ai = getAI();
   
-  onProgress?.("Codifica video...");
+  onProgress?.("Lettura file...");
   const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error("Errore durante la lettura del file video."));
   });
 
   onProgress?.("Audit Master in corso...");
   
-  return await callWithRetry(async () => {
+  try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: [{
         parts: [
           { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-          { text: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA.
-            Analizza questo video per ${platform} in ${lang}.
+          { text: `AGISCI COME UN PRODUTTORE YOUTUBE SENIOR (20 ANNI DI ESPERIENZA). 
+            Analizza questo video per ${platform} in lingua ${lang}.
+            REGOLE: Sii spietato, tecnico e strategico.
             
-            AUDIT RICHIESTO (RISPONDI SOLO IN JSON):
+            RISPONDI ESCLUSIVAMENTE IN JSON:
             {
               "score": "voto 0-100",
-              "title": "3 Titoli Magnetici | divisi da pipe",
-              "analysis": "Audit tecnico spietato di 300 parole su montaggio, ritmo e retention",
-              "caption": "Copy persuasivo pronto all'uso",
+              "title": "3 Titoli Magnetici | separati da pipe",
+              "analysis": "Audit tecnico spietato di almeno 300 parole",
+              "caption": "Copy persuasivo",
               "hashtags": ["tag1", "tag2"],
-              "visualData": "Dettagli visivi per lo storyboard",
-              "platformSuggestion": "Trucco algoritmo",
+              "visualData": "Dettagli visivi per montaggio",
+              "platformSuggestion": "Consiglio algoritmo",
               "ideaDuration": "Durata consigliata"
             }` 
           }
         ]
       }],
-      config: { responseMimeType: "application/json" }
+      config: { 
+        responseMimeType: "application/json"
+      }
     });
 
-    return JSON.parse(cleanJSON(response.text || "{}"));
-  });
+    const text = response.text;
+    if (!text) throw new Error("Il modello non ha restituito una risposta valida.");
+    
+    return JSON.parse(cleanJSON(text));
+  } catch (error: any) {
+    console.error("DEBUG API ERROR:", error);
+    // Propaghiamo l'errore specifico per l'interfaccia
+    throw error;
+  }
 }
 
 export async function generateIdea(prompt: string, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
-  
-  return await callWithRetry(async () => {
+  try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `AGISCI COME PRODUTTORE SENIOR (20Y EXP). Crea strategia per ${platform} in ${lang} su: "${prompt}". Rispondi in JSON:
-      {
-        "score": "0-100",
-        "title": "Titoli | pipe",
-        "analysis": "Strategia completa (300 parole)",
-        "caption": "Copy",
-        "hashtags": ["tag"],
-        "visualData": "Briefing montaggio",
-        "platformSuggestion": "Algoritmo",
-        "ideaDuration": "Durata"
-      }`,
+      contents: `AGISCI COME PRODUTTORE SENIOR. Crea strategia per ${platform} in ${lang} su: "${prompt}". Rispondi in JSON.`,
       config: { responseMimeType: "application/json" }
     });
-    
     return JSON.parse(cleanJSON(response.text || "{}"));
-  });
+  } catch (error: any) {
+    throw error;
+  }
 }
 
 export async function generateSceneAnalysis(visualData: string, lang: Language): Promise<Scene[]> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: `Crea storyboard tecnico in ${lang} basato su: ${visualData}. Restituisci array JSON di 6 scene.`,
+    contents: `Crea storyboard tecnico in ${lang} per: ${visualData}. Array JSON di 6 scene.`,
     config: { responseMimeType: "application/json" }
   });
   return JSON.parse(cleanJSON(response.text || "[]"));
