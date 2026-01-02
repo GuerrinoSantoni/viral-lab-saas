@@ -9,7 +9,7 @@ import { AnalysisView } from './components/AnalysisView';
 
 const MAX_FILE_SIZE_MB = 15;
 const INITIAL_FREE_CREDITS = 3;
-const LANGUAGES: Language[] = ['IT', 'EN', 'ES', 'FR'];
+const LANGUAGES: Language[] = ['IT', 'EN', 'DE', 'FR'];
 
 export default function App() {
   const [lang, setLang] = useState<Language>(() => {
