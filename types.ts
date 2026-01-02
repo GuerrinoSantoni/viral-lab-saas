@@ -1,6 +1,6 @@
 
 export type Platform = 'YOUTUBE' | 'TIKTOK' | 'IG' | 'LINKEDIN';
-export type Language = 'IT' | 'EN' | 'ES' | 'FR';
+export type Language = 'IT' | 'EN' | 'DE' | 'FR';
 
 export interface Scene {
   scene: number;
