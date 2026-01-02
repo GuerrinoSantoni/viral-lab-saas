@@ -80,7 +80,6 @@ export default function App() {
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => {
-        // Mappa gli step tecnici alle traduzioni se necessario, altrimenti usa processing
         setStatus(t.processing);
       });
       setResult(res);
@@ -96,7 +95,7 @@ export default function App() {
   const handleGenerateIdea = async () => {
     if (!platform) return alert(lang === 'IT' ? "Seleziona una piattaforma." : "Select a platform.");
     if (!isMaster && credits <= 0) return setShowPricing(true);
-    if (!ideaText.trim() && !ideaFile) return alert(lang === 'IT' ? "Scrivi un'idea!" : "Write an idea!");
+    if (!ideaText.trim() && !ideaFile) return alert(lang === 'IT' ? "Scrivi un'idea o carica un'immagine!" : "Write an idea or upload an image!");
     
     setLoading(true);
     setStatus(t.processing);
@@ -123,7 +122,6 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-8">
-          {/* Selettore Lingua */}
           <div className="hidden md:flex gap-3 bg-white/5 p-1 rounded-full border border-white/10">
             {LANGUAGES.map(l => (
               <button 
@@ -175,20 +173,41 @@ export default function App() {
                   <input type="file" className="hidden" accept="video/*" disabled={!platform || loading} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
               ) : (
-                <div className="glass p-10 rounded-[40px] space-y-6 border border-white/10 shadow-2xl">
+                <div className="glass p-10 rounded-[40px] space-y-6 border border-white/10 shadow-2xl bg-gradient-to-br from-white/[0.02] to-transparent">
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
                     placeholder={t.ideaPlaceholder}
-                    className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
+                    className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[120px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
-                  <button 
-                    onClick={handleGenerateIdea} 
-                    disabled={loading}
-                    className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl"
-                  >
-                    {t.ideaLabel}
-                  </button>
+                  
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <label className="flex-1 cursor-pointer">
+                      <div className={`h-full min-h-[80px] border-2 border-dashed rounded-2xl flex items-center justify-center gap-4 transition-all ${ideaFile ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-[#1087a0]'}`}>
+                        {ideaFile ? (
+                          <div className="flex items-center gap-4 p-4 w-full">
+                            <img src={URL.createObjectURL(ideaFile)} alt="preview" className="w-12 h-12 rounded object-cover" />
+                            <span className="text-[10px] font-black uppercase truncate flex-1">{ideaFile.name}</span>
+                            <button onClick={(e) => { e.preventDefault(); setIdeaFile(null); }} className="text-red-500 font-black text-[10px] uppercase">{t.removeImage}</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">🖼️</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t.imageUploadLabel}</span>
+                          </div>
+                        )}
+                      </div>
+                      <input type="file" className="hidden" accept="image/*" onChange={(e) => e.target.files?.[0] && setIdeaFile(e.target.files[0])} />
+                    </label>
+
+                    <button 
+                      onClick={handleGenerateIdea} 
+                      disabled={loading}
+                      className="md:w-1/3 py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl"
+                    >
+                      {t.ideaLabel}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
