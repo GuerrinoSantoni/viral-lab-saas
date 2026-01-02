@@ -2,9 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
-// Modelli differenziati per non saturare la quota di un singolo modello
-const MAIN_MODEL = 'gemini-3-flash-preview'; // Visione + Analisi
-const LITE_MODEL = 'gemini-2.5-flash-lite-latest'; // Storyboard e Testo veloce
+const MAIN_MODEL = 'gemini-3-flash-preview'; 
+const LITE_MODEL = 'gemini-2.5-flash-lite-latest'; 
 
 const getAI = () => {
   const apiKey = process.env.API_KEY;
@@ -12,24 +11,31 @@ const getAI = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-function extractJSON(text: string): any {
+// Definizione dello schema per garantire che i campi siano SEMPRE presenti
+const ANALYSIS_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    score: { type: Type.STRING, description: "Punteggio virale (es. 85/100)" },
+    title: { type: Type.STRING, description: "Titolo accattivante" },
+    analysis: { type: Type.STRING, description: "Critica costruttiva senior" },
+    caption: { type: Type.STRING, description: "Testo del post" },
+    hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
+    visualData: { type: Type.STRING, description: "Descrizione visiva per storyboard" },
+    platformSuggestion: { type: Type.STRING, description: "Consiglio specifico piattaforma" },
+    ideaDuration: { type: Type.STRING, description: "Durata stimata (es. 45s)" },
+  },
+  required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"],
+};
+
+function cleanAndParse(text: string): any {
   if (!text) return null;
   try {
-    const firstBracket = text.indexOf('[');
-    const lastBracket = text.lastIndexOf(']');
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    
-    if (firstBracket !== -1 && lastBracket !== -1 && (firstBracket < firstBrace || firstBrace === -1)) {
-      return JSON.parse(text.substring(firstBracket, lastBracket + 1));
-    }
-    if (firstBrace !== -1 && lastBrace !== -1) {
-      return JSON.parse(text.substring(firstBrace, lastBrace + 1));
-    }
-    return JSON.parse(text);
+    // Rimuove eventuali markdown code blocks se presenti nonostante il mimeType
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanText);
   } catch (e) {
     console.error("Errore Parsing JSON:", text);
-    throw new Error("Il Master ha inviato dati sporchi. Riprova.");
+    throw new Error("L'AI ha risposto in un formato non valido. Riprova.");
   }
 }
 
@@ -54,13 +60,19 @@ export async function analyzeVideo(
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `AGISCI COME UN PRODUTTORE YOUTUBE SENIOR. Analizza questo video per ${platform} in ${lang}. Restituisci un JSON con: score (XX/100), title (virale), analysis (critica), caption, hashtags (array), visualData (note visive per storyboard), platformSuggestion, ideaDuration.` }
+        { text: `AGISCI COME UN PRODUTTORE YOUTUBE CON 20 ANNI DI ESPERIENZA. 
+        Analizza questo video per la piattaforma ${platform} in lingua ${lang}. 
+        Sii critico, onesto e brutale se necessario. 
+        Identifica hook, retention e potenziale virale.` }
       ]
     }],
-    config: { responseMimeType: "application/json" }
+    config: { 
+      responseMimeType: "application/json",
+      responseSchema: ANALYSIS_SCHEMA
+    }
   });
 
-  return extractJSON(response.text);
+  return cleanAndParse(response.text);
 }
 
 export async function generateIdea(
@@ -81,24 +93,43 @@ export async function generateIdea(
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
 
-  parts.push({ text: `PRODUTTORE SENIOR: Strategia virale per ${platform} in ${lang}. Input: "${prompt}". Rispondi in JSON.` });
+  parts.push({ text: `PRODUTTORE SENIOR: Crea una strategia virale per ${platform} in lingua ${lang}. 
+  Usa questo input: "${prompt}". 
+  Definisci un concept che spacca il mercato.` });
 
   const response = await ai.models.generateContent({
     model: MAIN_MODEL,
     contents: [{ parts }],
-    config: { responseMimeType: "application/json" }
+    config: { 
+      responseMimeType: "application/json",
+      responseSchema: ANALYSIS_SCHEMA
+    }
   });
-  return extractJSON(response.text);
+  return cleanAndParse(response.text);
 }
 
 export async function generateSceneAnalysis(visualData: string, lang: Language): Promise<Scene[]> {
   const ai = getAI();
-  // Usiamo il modello LITE che ha quote molto più alte per il solo testo
   const response = await ai.models.generateContent({
     model: LITE_MODEL,
-    contents: `PRODUTTORE SENIOR: Crea uno storyboard tecnico (6 scene) da queste note: "${visualData}". 
-    Lingua: ${lang}. Restituisci un array JSON con: scene, description, audioSFX, duration.`,
-    config: { responseMimeType: "application/json" }
+    contents: `PRODUTTORE SENIOR: Crea uno storyboard tecnico di 6 scene basato su: "${visualData}". 
+    Lingua: ${lang}. Restituisci un array di oggetti con scene, description, audioSFX, duration.`,
+    config: { 
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            scene: { type: Type.NUMBER },
+            description: { type: Type.STRING },
+            audioSFX: { type: Type.STRING },
+            duration: { type: Type.STRING },
+          },
+          required: ["scene", "description", "audioSFX", "duration"]
+        }
+      }
+    }
   });
-  return extractJSON(response.text);
+  return cleanAndParse(response.text);
 }
