@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+// Add React import to fix 'Cannot find namespace React'
+import React, { useState } from 'react';
 import { AnalysisResult, Language, Scene } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { generateSceneAnalysis } from '../services/geminiService';
