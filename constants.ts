@@ -1,3 +1,4 @@
+
 export const PLATFORMS = [
   { id: 'YOUTUBE', label: 'YouTube Shorts', icon: '🎬' },
   { id: 'TIKTOK', label: 'TikTok Viral', icon: '🎵' },
@@ -43,7 +44,8 @@ export const TRANSLATIONS = {
 };
 
 export const PRICING_TIERS = [
-  { id: 'starter', name: 'Starter Executive', price: '€0', credits: 3, features: ['Audit Video AI', 'Analisi Senior'], popular: false },
-  { id: 'pro', name: 'Pro Authority', price: '€49', credits: 50, features: ['Priorità Elaborazione', 'Analisi Scene'], popular: true },
-  { id: 'master', name: 'Master Strategic', price: '€99', credits: 150, features: ['White Label', 'Analisi Competitor'], popular: false }
+  { id: 'free', name: 'Free Strategy', price: '€0', credits: 3, features: ['3 Audit / Mese', 'Analisi Senior AI'], popular: false },
+  { id: 'entry', name: 'Entry Growth', price: '€19', credits: 12, features: ['Priorità Elaborazione', 'Analisi Scene'], popular: false },
+  { id: 'medium', name: 'Medium Authority', price: '€49', credits: 40, features: ['Analisi Strategica Pro', 'Supporto Prioritario'], popular: true },
+  { id: 'premium', name: 'Premium Master', price: '€99', credits: 120, features: ['White Label Report', 'Competitor Audit'], popular: false }
 ];
