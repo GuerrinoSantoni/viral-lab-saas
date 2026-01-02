@@ -1,18 +1,21 @@
 
 import { useState, useEffect } from 'react';
 import { Platform, AnalysisResult, Language } from './types';
-import { PLATFORMS } from './constants';
+import { PLATFORMS, TRANSLATIONS } from './constants';
 import { analyzeVideo, generateIdea } from './services/geminiService';
 import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
 const MAX_FILE_SIZE_MB = 15;
-const MAX_IMAGE_SIZE_MB = 5;
 const INITIAL_FREE_CREDITS = 3;
+const LANGUAGES: Language[] = ['IT', 'EN', 'ES', 'FR'];
 
 export default function App() {
-  const [lang] = useState<Language>('IT');
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem('sg_lang');
+    return (saved as Language) || 'IT';
+  });
   const [mode, setMode] = useState<'VIDEO' | 'IDEA'>('VIDEO');
   const [platform, setPlatform] = useState<Platform | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,6 +33,8 @@ export default function App() {
   const [isMaster, setIsMaster] = useState(() => localStorage.getItem('sg_master') === 'true');
   const [clickCount, setClickCount] = useState(0);
 
+  const t = TRANSLATIONS[lang];
+
   useEffect(() => {
     localStorage.setItem('sg_credits', credits.toString());
   }, [credits]);
@@ -37,6 +42,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('sg_master', isMaster.toString());
   }, [isMaster]);
+
+  useEffect(() => {
+    localStorage.setItem('sg_lang', lang);
+  }, [lang]);
 
   const handleLogoClick = () => {
     const newCount = clickCount + 1;
@@ -52,26 +61,28 @@ export default function App() {
   const handleError = (e: any) => {
     console.error("Master Debug:", e);
     const msg = e.message || "";
-    // Intercettiamo l'errore di quota esaurita di Google
     if (msg.includes("RESOURCE_EXHAUSTED") || msg.includes("429") || msg.includes("quota")) {
-      alert("⚠️ IL MASTER È ESAUSTO: Hai raggiunto il limite di 20 analisi gratuite giornaliere imposto da Google. Torna domani per nuovi crediti gratuiti o usa un piano Pro.");
+      alert(t.errorQuota);
     } else if (msg.includes("500") || msg.includes("Internal")) {
-      alert("⚠️ SERVER GOOGLE SATURO: Troppi utenti collegati. Riprova tra 10 secondi.");
+      alert(t.errorServer);
     } else {
-      alert(`❌ ERRORE TECNICO: ${msg || "Connessione persa."}`);
+      alert(`${t.errorGeneric} (${msg})`);
     }
   };
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Seleziona una piattaforma.");
+    if (!platform) return alert(lang === 'IT' ? "Seleziona una piattaforma." : "Select a platform.");
     if (!isMaster && credits <= 0) return setShowPricing(true);
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) return alert(`Max ${MAX_FILE_SIZE_MB}MB.`);
     
     setLoading(true);
-    setStatus("Codifica Stream...");
+    setStatus(t.encoding);
     setLastFile(file);
     try {
-      const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
+      const res = await analyzeVideo(file, platform, lang, (step) => {
+        // Mappa gli step tecnici alle traduzioni se necessario, altrimenti usa processing
+        setStatus(t.processing);
+      });
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
@@ -83,12 +94,12 @@ export default function App() {
   };
 
   const handleGenerateIdea = async () => {
-    if (!platform) return alert("Scegli piattaforma!");
+    if (!platform) return alert(lang === 'IT' ? "Seleziona una piattaforma." : "Select a platform.");
     if (!isMaster && credits <= 0) return setShowPricing(true);
-    if (!ideaText.trim() && !ideaFile) return alert("Scrivi un'idea!");
+    if (!ideaText.trim() && !ideaFile) return alert(lang === 'IT' ? "Scrivi un'idea!" : "Write an idea!");
     
     setLoading(true);
-    setStatus("Analisi Strategica...");
+    setStatus(t.processing);
     try {
       const res = await generateIdea(ideaText, platform, lang, ideaFile || undefined);
       setResult(res);
@@ -106,17 +117,33 @@ export default function App() {
         <div className="flex items-center gap-4 cursor-pointer select-none" onClick={handleLogoClick}>
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black transition-all ${isMaster ? 'bg-yellow-500 shadow-[0_0_20px_#eab308]' : 'bg-[#a02a11] shadow-[0_0_15px_#a02a11]'}`}>SG</div>
           <div className="flex flex-col">
-            <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Master Audit</span>
-            {isMaster && <span className="text-[8px] font-black text-yellow-500 tracking-widest">MASTER UNLIMITED</span>}
+            <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">{t.tagline}</span>
+            {isMaster && <span className="text-[8px] font-black text-yellow-500 tracking-widest uppercase">MASTER UNLIMITED</span>}
           </div>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-end">
-            <span className={`text-[10px] font-black uppercase tracking-widest ${credits === 0 && !isMaster ? 'text-red-500' : 'text-gray-400'}`}>
-              CREDITI APP: {isMaster ? '∞' : credits}
-            </span>
+
+        <div className="flex items-center gap-8">
+          {/* Selettore Lingua */}
+          <div className="hidden md:flex gap-3 bg-white/5 p-1 rounded-full border border-white/10">
+            {LANGUAGES.map(l => (
+              <button 
+                key={l} 
+                onClick={() => setLang(l)}
+                className={`w-8 h-8 rounded-full text-[9px] font-black transition-all ${lang === l ? 'bg-[#a02a11] text-white' : 'text-gray-500 hover:text-white'}`}
+              >
+                {l}
+              </button>
+            ))}
           </div>
-          <button onClick={() => setShowPricing(true)} className="bg-white text-black px-6 py-2 rounded-full font-black text-[9px] uppercase hover:bg-[#a02a11] hover:text-white transition-all">UPGRADE</button>
+
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${credits === 0 && !isMaster ? 'text-red-500' : 'text-gray-400'}`}>
+                {t.creditsLabel}: {isMaster ? '∞' : credits}
+              </span>
+            </div>
+            <button onClick={() => setShowPricing(true)} className="bg-white text-black px-6 py-2 rounded-full font-black text-[9px] uppercase hover:bg-[#a02a11] hover:text-white transition-all">{t.upgradeBtn}</button>
+          </div>
         </div>
       </nav>
 
@@ -124,12 +151,12 @@ export default function App() {
         {!result && !loading && (
           <div className="w-full text-center space-y-12 animate-fadeIn">
             <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter">
-              MASTER.<span className="text-[#a02a11]">AUDIT</span>
+              {t.mainTitle}<span className="text-[#a02a11]">{t.mainTitleRed}</span>
             </h1>
 
             <div className="flex bg-white/5 p-1 rounded-2xl w-fit mx-auto border border-white/10">
-              <button onClick={() => setMode('VIDEO')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${mode === 'VIDEO' ? 'bg-[#a02a11] text-white' : 'text-gray-500'}`}>Analisi Video</button>
-              <button onClick={() => setMode('IDEA')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${mode === 'IDEA' ? 'bg-[#a02a11] text-white' : 'text-gray-500'}`}>Generatore Idee</button>
+              <button onClick={() => setMode('VIDEO')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${mode === 'VIDEO' ? 'bg-[#a02a11] text-white' : 'text-gray-500'}`}>{t.modeVideo}</button>
+              <button onClick={() => setMode('IDEA')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${mode === 'IDEA' ? 'bg-[#a02a11] text-white' : 'text-gray-500'}`}>{t.modeIdea}</button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl mx-auto">
@@ -143,7 +170,7 @@ export default function App() {
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
                     <div className="text-6xl group-hover:scale-125 transition-transform">🎞️</div>
-                    <span className="text-xl font-black uppercase italic">Carica Video per l'Audit</span>
+                    <span className="text-xl font-black uppercase italic">{t.uploadLabel}</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform || loading} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -152,7 +179,7 @@ export default function App() {
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Descrivi la tua idea virale..."
+                    placeholder={t.ideaPlaceholder}
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
                   <button 
@@ -160,7 +187,7 @@ export default function App() {
                     disabled={loading}
                     className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl"
                   >
-                    Genera Strategia Virale
+                    {t.ideaLabel}
                   </button>
                 </div>
               )}
@@ -179,7 +206,7 @@ export default function App() {
           <AnalysisView result={result} videoFile={lastFile || undefined} language={lang} onReset={() => {setResult(null); setPlatform(null); setIdeaText(""); setIdeaFile(null);}} />
         )}
       </main>
-      {showPricing && <PricingModal onClose={() => setShowPricing(false)} />}
+      {showPricing && <PricingModal onClose={() => setShowPricing(false)} language={lang} />}
     </div>
   );
 }
