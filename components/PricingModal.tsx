@@ -1,20 +1,24 @@
 
 import React from 'react';
-import { PRICING_TIERS } from '../constants';
+import { PRICING_TIERS, TRANSLATIONS } from '../constants';
+import { Language } from '../types';
 
 interface PricingModalProps {
   onClose: () => void;
+  language: Language;
 }
 
-export const PricingModal: React.FC<PricingModalProps> = ({ onClose }) => {
+export const PricingModal: React.FC<PricingModalProps> = ({ onClose, language }) => {
+  const t = TRANSLATIONS[language] || TRANSLATIONS.IT;
+  
   return (
     <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto">
       <div className="glass rounded-[50px] w-full max-w-7xl p-8 md:p-12 shadow-2xl relative my-8 border border-white/5">
         <button onClick={onClose} className="absolute top-8 right-10 text-gray-500 hover:text-white font-black text-2xl transition-colors">X</button>
         
         <div className="text-center mb-12 space-y-4">
-          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">UPGRADE ASSETS</h2>
-          <p className="text-[10px] text-[#1087a0] font-black uppercase tracking-[0.4em]">Scegli il tuo piano strategico</p>
+          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-white">{t.pricingTitle}</h2>
+          <p className="text-[10px] text-[#1087a0] font-black uppercase tracking-[0.4em]">{t.pricingSub}</p>
           <div className="h-1.5 w-24 bg-[#a02a11] mx-auto mt-4"></div>
         </div>
         
@@ -25,7 +29,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ onClose }) => {
               <div className="text-4xl font-black text-white mb-6 tracking-tighter">{tier.price}</div>
               <div className="flex-1 space-y-5 mb-8">
                 <div className="bg-[#ffe399]/10 py-1.5 px-4 rounded-full inline-block">
-                  <p className="text-[9px] font-black text-[#ffe399] uppercase tracking-widest">⚡ {tier.credits} CREDITI</p>
+                  <p className="text-[9px] font-black text-[#ffe399] uppercase tracking-widest">⚡ {tier.credits} {t.creditsLabel.split(' ')[0]}</p>
                 </div>
                 <div className="space-y-3">
                   {tier.features.map((f, idx) => (
@@ -35,7 +39,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ onClose }) => {
                   ))}
                 </div>
               </div>
-              <button className="w-full bg-white text-black py-4 rounded-xl font-black uppercase text-[9px] tracking-[0.2em] hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">ATTIVA ORA</button>
+              <button className="w-full bg-white text-black py-4 rounded-xl font-black uppercase text-[9px] tracking-[0.2em] hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">{t.activate}</button>
             </div>
           ))}
         </div>
