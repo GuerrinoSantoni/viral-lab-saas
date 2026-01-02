@@ -7,7 +7,7 @@ import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
-const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_MB = 25;
 
 export default function App() {
   const [lang] = useState<Language>('IT');
@@ -22,22 +22,23 @@ export default function App() {
   const [credits, setCredits] = useState(10);
 
   const handleError = (e: any) => {
-    console.error("DETTAGLIO ERRORE:", e);
-    
+    console.error("ERRORE RILEVATO:", e);
     const msg = e.message || "";
     
-    if (msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED")) {
-      alert("⚠️ AVVISO GOOGLE (429)\n\nIl traffico è intenso. Attendi 30-60 secondi e riprova.\nQuesto succede se carichi molti video in sequenza.");
+    if (msg.includes("500") || msg.includes("Internal")) {
+      alert("⚠️ ERRORE SERVER GOOGLE: I server di Google sono temporaneamente sovraccarichi per l'analisi video. Riprova tra 30 secondi, solitamente si sblocca subito.");
+    } else if (msg.includes("429")) {
+      alert("⚠️ QUOTA RAGGIUNTA: Troppe richieste contemporanee. Attendi un minuto.");
     } else {
-      alert(`❌ ERRORE MASTER: ${msg || "Problema di connessione. Riprova tra un istante."}`);
+      alert(`❌ IL MASTER DICE: ${msg || "Si è verificato un problema tecnico. Riprova."}`);
     }
   };
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Scegli piattaforma!");
+    if (!platform) return alert("Per favore, seleziona una piattaforma prima!");
     
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`File troppo grande! Massimo ${MAX_FILE_SIZE_MB}MB.`);
+      return alert(`Il file è troppo pesante (${(file.size/1024/1024).toFixed(1)}MB). Carica un video sotto i ${MAX_FILE_SIZE_MB}MB per l'analisi.`);
     }
 
     setLoading(true);
@@ -59,7 +60,7 @@ export default function App() {
     if (!platform) return alert("Scegli piattaforma!");
     if (!ideaText.trim()) return alert("Scrivi la tua idea!");
     setLoading(true);
-    setStatus("Creazione Strategia...");
+    setStatus("Sviluppo Strategia...");
     try {
       const res = await generateIdea(ideaText, platform, lang);
       setResult(res);
@@ -76,7 +77,7 @@ export default function App() {
       <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-12 shadow-2xl premium-border">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black shadow-[0_0_15px_#a02a11]">SG</div>
-          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Audit • Stable Engine</span>
+          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Audit • Hyper-Stable</span>
         </div>
         <div className="flex items-center gap-6">
           <span className="text-[10px] font-black uppercase text-gray-400">CREDITI: {credits}</span>
@@ -108,9 +109,9 @@ export default function App() {
               {mode === 'VIDEO' ? (
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
-                    <div className="text-6xl group-hover:scale-125 transition-transform duration-500">💎</div>
-                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video per l'Audit (Motore Stabile)</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Sistema ultra-stabile Gemini 1.5 Flash</span>
+                    <div className="text-6xl group-hover:scale-125 transition-transform duration-500">🛡️</div>
+                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video per l'Audit</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic tracking-wider">MODALITÀ RESILIENTE GOOGLE 2.5 LITE</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -119,10 +120,10 @@ export default function App() {
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Descrivi la tua idea qui..."
+                    placeholder="Descrivi la tua strategia qui..."
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
-                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">Genera Analisi Senior</button>
+                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">Ottieni Strategia Senior</button>
                 </div>
               )}
             </div>
@@ -133,6 +134,7 @@ export default function App() {
           <div className="py-24 flex flex-col items-center gap-10 text-center w-full animate-fadeIn max-w-xl">
             <div className="w-24 h-24 border-[2px] border-[#a02a11] border-t-transparent rounded-full animate-spin"></div>
             <p className="text-3xl font-black uppercase italic tracking-tighter text-white">{status}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest animate-pulse">I server di Google stanno elaborando i frame...</p>
           </div>
         )}
 
