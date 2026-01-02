@@ -22,22 +22,32 @@ export default function App() {
   const [credits, setCredits] = useState(10);
 
   const handleError = (e: any) => {
-    console.error("APP ERROR:", e);
-    if (e.message === "QUOTA_EXCEEDED") {
-      alert("⚠️ QUOTA ESAURITA (Errore 429)\nHai raggiunto il limite di richieste gratuite di Google Gemini.\n\nAttendi 60 secondi prima di riprovare oppure usa una chiave API con piano a pagamento (Pay-as-you-go).");
+    console.error("DETTAGLIO ERRORE:", e);
+    
+    // Gestione specifica Errore 429 (Quota)
+    if (e.message?.includes("429") || e.message === "QUOTA_EXCEEDED") {
+      alert(`⚠️ LIMITE GOOGLE RAGGIUNTO (429)
+      
+Il piano gratuito di Gemini ha dei limiti di traffico.
+COSA FARE:
+1. Aspetta circa 60 secondi e riprova (di solito basta un minuto).
+2. Se hai fatto tantissimi test, Google potrebbe averti bloccato per qualche ora.
+3. Non caricare lo stesso video troppe volte di fila se fallisce.`);
+    } else if (e.message?.includes("fetch")) {
+      alert("ERRORE DI CONNESSIONE: Il caricamento del video è stato interrotto dalla rete o dal firewall. Prova con un file più piccolo o cambia connessione.");
     } else {
-      alert("ERRORE TECNICO\nIl sistema ha riscontrato un problema imprevisto. Riprova tra un istante.");
+      alert("OPS! Il Master ha riscontrato un problema tecnico. Riprova tra un istante.");
     }
   };
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Seleziona una piattaforma!");
+    if (!platform) return alert("Seleziona prima la piattaforma!");
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`Limite: ${MAX_FILE_SIZE_MB}MB.`);
+      return alert(`File troppo grande. Massimo ${MAX_FILE_SIZE_MB}MB.`);
     }
 
     setLoading(true);
-    setStatus("Analisi Video in corso...");
+    setStatus("Upload e Analisi in corso...");
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
@@ -56,7 +66,7 @@ export default function App() {
     if (!ideaText.trim()) return alert("Scrivi la tua idea!");
     
     setLoading(true);
-    setStatus("Analisi Strategica Idea...");
+    setStatus("Generazione Strategia...");
     try {
       const res = await generateIdea(ideaText, platform, lang);
       setResult(res);
@@ -111,7 +121,7 @@ export default function App() {
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
                     <div className="text-6xl group-hover:scale-110 transition-transform">🚀</div>
                     <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video (Max {MAX_FILE_SIZE_MB}MB)</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Feedback immediato con Gemini 3 Flash</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Analisi Multimodale Gemini 3 Flash</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -120,10 +130,10 @@ export default function App() {
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Descrivi la tua idea strategica in poche parole..."
+                    placeholder="Esempio: Vorrei fare un video su come risparmiare tasse per le P.IVA..."
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
-                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">Analizza Strategia Idea</button>
+                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">Ottieni Strategia Master</button>
                 </div>
               )}
             </div>
@@ -134,14 +144,14 @@ export default function App() {
           <div className="py-24 flex flex-col items-center gap-10 text-center w-full animate-fadeIn max-w-xl">
             <div className="relative">
                <div className="w-32 h-32 border-[2px] border-[#a02a11]/20 border-t-[#a02a11] rounded-full animate-spin"></div>
-               <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black uppercase italic text-[#a02a11] animate-pulse tracking-tighter">Gemini 3</div>
+               <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black uppercase italic text-[#a02a11] animate-pulse">FLASH</div>
             </div>
             <div className="space-y-4">
               <p className="text-3xl font-black uppercase italic tracking-tighter text-white">
                 {status}
               </p>
               <p className="text-[10px] text-gray-500 uppercase tracking-[0.4em] font-black animate-pulse">
-                Elaborazione dati con tecnologia Flash
+                Accesso ai server Gemini 3...
               </p>
             </div>
           </div>
