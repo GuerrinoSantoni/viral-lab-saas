@@ -17,7 +17,9 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
   const [copied, setCopied] = useState(false);
   const t = (TRANSLATIONS[language] || TRANSLATIONS.IT) as any;
 
-  const hashtags = Array.isArray(result.hashtags) ? result.hashtags : [];
+  // Garantisce che hashtags e score esistano sempre
+  const hashtags = Array.isArray(result?.hashtags) ? result.hashtags : [];
+  const displayScore = result?.score || "N/A";
 
   const loadScript = async () => {
     setLoadingScript(true);
@@ -27,17 +29,20 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
       setScript(data);
     } catch (e) { 
       console.error("Errore Script:", e);
-      alert("⚠️ IL MASTER È OCCUPATO: La generazione dello storyboard è complessa. Riprova tra 5 secondi o accorcia l'idea."); 
+      alert("⚠️ IL MASTER È OCCUPATO: La generazione dello storyboard è complessa. Riprova tra 5 secondi."); 
     } finally { 
       setLoadingScript(false); 
     }
   };
 
-  if (!result || !result.score) {
+  // Se l'oggetto result è completamente rotto, mostriamo l'errore
+  if (!result || (!result.score && !result.analysis)) {
     return (
-      <div className="glass p-12 rounded-[40px] text-center space-y-4">
-        <p className="text-[#a02a11] font-black uppercase tracking-widest">ERRORE CRITICO ANALISI</p>
-        <button onClick={onReset} className="bg-white text-black px-8 py-3 rounded-xl font-bold uppercase text-[10px]">Torna Indietro</button>
+      <div className="glass p-12 rounded-[40px] text-center space-y-4 max-w-md">
+        <div className="text-6xl mb-4">⚠️</div>
+        <p className="text-[#a02a11] font-black uppercase tracking-widest">ERRORE GENERAZIONE AI</p>
+        <p className="text-gray-500 text-[10px] uppercase">Il modello non ha restituito dati validi. Potrebbe esserci un sovraccarico dei server Google.</p>
+        <button onClick={onReset} className="w-full mt-4 bg-white text-black px-8 py-3 rounded-xl font-bold uppercase text-[10px] hover:bg-[#a02a11] hover:text-white transition-all">Torna Indietro</button>
       </div>
     );
   }
@@ -45,49 +50,63 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
   return (
     <div className="w-full space-y-12 animate-fadeIn pb-24">
       <div className="flex justify-between items-center glass p-5 rounded-3xl">
-        <button onClick={onReset} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all">← {t.newAudit}</button>
-        <div className="text-[10px] font-black text-[#1087a0] uppercase tracking-widest italic">MASTER REPORT • PRODUCTION HUB</div>
+        <button onClick={onReset} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all">← NUOVO AUDIT</button>
+        <div className="text-[10px] font-black text-[#1087a0] uppercase tracking-widest italic">MASTER REPORT • {result.platformSuggestion || 'GENERAL'}</div>
       </div>
 
       <div className="glass p-12 rounded-[50px] flex flex-col md:flex-row items-center gap-12 shadow-2xl relative overflow-hidden border border-white/5">
         <div className="w-48 h-48 bg-gradient-to-br from-[#a02a11] to-[#1087a0] rounded-full flex flex-col items-center justify-center border-4 border-white/10 shadow-[0_0_50px_rgba(160,42,17,0.3)] shrink-0">
-          <span className="text-[10px] font-black text-white/50 uppercase tracking-tighter mb-1">{t.viralScore}</span>
-          <span className="text-5xl font-black text-white leading-none tracking-tighter">{result.score.includes('/100') ? result.score : `${result.score}/100`}</span>
+          <span className="text-[10px] font-black text-white/50 uppercase tracking-tighter mb-1">VIRAL SCORE</span>
+          <span className="text-5xl font-black text-white leading-none tracking-tighter">
+            {displayScore.includes('/100') ? displayScore : `${displayScore}/100`}
+          </span>
         </div>
         <div className="flex-1 text-center md:text-left space-y-4">
-          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-[0.9] text-gradient">{result.title}</h2>
+          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-[0.9] text-gradient">
+            {result.title || "Strategia Virale"}
+          </h2>
           <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-4">
-            <span className="bg-[#1087a0]/20 text-[#1087a0] px-6 py-2 rounded-full text-[10px] font-black uppercase border border-[#1087a0]/30">{result.platformSuggestion}</span>
-            <span className="bg-white/5 text-gray-300 px-6 py-2 rounded-full text-[10px] font-black uppercase border border-white/5 tracking-widest">{result.ideaDuration}</span>
+            <span className="bg-[#1087a0]/20 text-[#1087a0] px-6 py-2 rounded-full text-[10px] font-black uppercase border border-[#1087a0]/30">
+              {result.platformSuggestion || "Multi-Platform"}
+            </span>
+            <span className="bg-white/5 text-gray-300 px-6 py-2 rounded-full text-[10px] font-black uppercase border border-white/5 tracking-widest">
+              {result.ideaDuration || "Custom Length"}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-1 gap-8">
         <div className="glass p-10 rounded-[40px] border-l-8 border-[#a02a11]">
-          <h3 className="text-[12px] font-black uppercase text-[#a02a11] mb-6 tracking-[0.4em]">{t.seniorInsight}</h3>
-          <p className="text-gray-200 italic text-lg leading-relaxed font-medium whitespace-pre-wrap">{result.analysis}</p>
+          <h3 className="text-[12px] font-black uppercase text-[#a02a11] mb-6 tracking-[0.4em]">SENIOR INSIGHT</h3>
+          <p className="text-gray-200 italic text-lg leading-relaxed font-medium whitespace-pre-wrap">
+            {result.analysis || "Analisi non disponibile."}
+          </p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="glass p-8 rounded-[40px] border-t-4 border-[#ffe399]">
           <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-6 tracking-widest">CONTENT STRUCTURE</h3>
-          <p className="text-gray-200 text-sm leading-relaxed font-bold uppercase tracking-tight opacity-80">{result.visualData}</p>
+          <p className="text-gray-200 text-sm leading-relaxed font-bold uppercase tracking-tight opacity-80">
+            {result.visualData || "Struttura visiva non generata."}
+          </p>
         </div>
 
         <div className="glass p-8 rounded-[40px] border-t-4 border-[#1087a0]">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-[10px] font-black uppercase text-[#1087a0] tracking-widest">{t.strategicCopy}</h3>
+            <h3 className="text-[10px] font-black uppercase text-[#1087a0] tracking-widest">STRATEGIC COPY</h3>
             <button 
-              onClick={() => { navigator.clipboard.writeText(result.caption); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+              onClick={() => { navigator.clipboard.writeText(result.caption || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
               className={`text-[8px] font-black uppercase px-4 py-2 rounded-full transition-all ${copied ? 'bg-green-500 text-white' : 'bg-white text-black hover:bg-[#a02a11] hover:text-white'}`}
             >
               {copied ? 'COPIATO' : 'COPIA'}
             </button>
           </div>
           <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-            <p className="text-gray-300 text-xs leading-relaxed whitespace-pre-wrap italic">{result.caption}</p>
+            <p className="text-gray-300 text-xs leading-relaxed whitespace-pre-wrap italic">
+              {result.caption || "Caption non generata."}
+            </p>
             <div className="mt-8 flex flex-wrap gap-3">
               {hashtags.map((tag, i) => (
                 <span key={i} className="text-[#1087a0] text-[10px] font-black uppercase tracking-tighter">#{tag.replace('#', '')}</span>
@@ -100,7 +119,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
       {!script ? (
         <div className="glass p-20 rounded-[60px] text-center space-y-8 border border-white/5 shadow-inner bg-gradient-to-b from-white/[0.02] to-transparent">
           <div className="text-7xl animate-pulse">🎬</div>
-          <h3 className="text-5xl font-black uppercase tracking-tighter italic">{t.scriptTitle}</h3>
+          <h3 className="text-5xl font-black uppercase tracking-tighter italic">STORYBOARD GENERATOR</h3>
           <p className="text-gray-500 text-[10px] uppercase tracking-[0.4em]">Audit Cinematografico • Storyboard Tecnico Dettagliato</p>
           <button 
             onClick={loadScript} 
@@ -113,7 +132,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
       ) : (
         <div className="space-y-16">
           <div className="text-center space-y-4">
-            <h3 className="text-5xl font-black uppercase tracking-tighter italic leading-none">{t.scriptTitle}</h3>
+            <h3 className="text-5xl font-black uppercase tracking-tighter italic leading-none">STORYBOARD TECNICO</h3>
             <p className="text-[#1087a0] font-black text-[10px] uppercase tracking-[0.5em]">Senior Master Storyboard • {script.length} Scene</p>
           </div>
           {script.map((s, i) => (
