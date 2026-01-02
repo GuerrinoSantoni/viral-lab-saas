@@ -2,6 +2,13 @@
 export type Platform = 'YOUTUBE' | 'TIKTOK' | 'IG' | 'LINKEDIN';
 export type Language = 'IT' | 'EN' | 'DE' | 'FR';
 
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  isPro: boolean;
+}
+
 export interface Scene {
   scene: number;
   description: string;
