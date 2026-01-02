@@ -32,7 +32,10 @@ export default function App() {
     const saved = localStorage.getItem('sg_credits');
     return saved !== null ? parseInt(saved) : 0;
   });
+
+  // MASTER MODE STATE
   const [isMaster, setIsMaster] = useState(() => localStorage.getItem('sg_master') === 'true');
+  const [clickCount, setClickCount] = useState(0);
 
   const t = TRANSLATIONS[lang];
 
@@ -41,15 +44,32 @@ export default function App() {
   useEffect(() => { localStorage.setItem('sg_lang', lang); }, [lang]);
   useEffect(() => { localStorage.setItem('sg_user', JSON.stringify(user)); }, [user]);
 
+  // Gestione attivazione Master Mode
+  const handleLogoClick = () => {
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+    if (newCount === 5) {
+      const newState = !isMaster;
+      setIsMaster(newState);
+      setClickCount(0);
+      alert(newState ? "MASTER MODE ATTIVATA: CREDITI ILLIMITATI" : "MASTER MODE DISATTIVATA");
+    }
+    // Reset contatore dopo 2 secondi di inattività
+    const timer = setTimeout(() => setClickCount(0), 2000);
+    return () => clearTimeout(timer);
+  };
+
   const handleLogin = (newUser: User) => {
     setUser(newUser);
     setShowAuth(false);
-    if (credits === 0) setCredits(3); // Regalo di benvenuto
+    if (credits === 0) setCredits(3); // Bonus primo accesso
   };
 
   const handleLogout = () => {
     setUser(null);
+    setIsMaster(false);
     localStorage.removeItem('sg_user');
+    localStorage.removeItem('sg_master');
   };
 
   const handlePurchaseSuccess = (newCredits: number) => {
@@ -57,11 +77,12 @@ export default function App() {
   };
 
   const checkAccess = () => {
+    if (isMaster) return true; // Bypass totale se Master
     if (!user) {
       setShowAuth(true);
       return false;
     }
-    if (!isMaster && credits <= 0) {
+    if (credits <= 0) {
       setShowPricing(true);
       return false;
     }
@@ -79,7 +100,7 @@ export default function App() {
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      alert("Errore Master: " + e.message);
+      alert("Errore Master Audit: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -88,7 +109,7 @@ export default function App() {
   const handleGenerateIdea = async () => {
     if (!platform) return alert("Seleziona una piattaforma.");
     if (!checkAccess()) return;
-    if (!ideaText.trim() && !ideaFile) return alert("Scrivi un'idea!");
+    if (!ideaText.trim() && !ideaFile) return alert("Scrivi un'idea o carica un'immagine!");
     
     setLoading(true);
     setStatus(t.processing);
@@ -97,7 +118,7 @@ export default function App() {
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      alert("Errore Master: " + e.message);
+      alert("Errore Master Idea: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -105,32 +126,53 @@ export default function App() {
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center bg-[#000] text-white">
+      {/* Navbar con Logo cliccabile per Master Mode */}
       <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-12 shadow-2xl premium-border">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center font-black bg-[#a02a11]">SG</div>
-          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">{t.tagline}</span>
+        <div 
+          className="flex items-center gap-4 cursor-pointer select-none active:scale-95 transition-transform" 
+          onClick={handleLogoClick}
+          title="Master Access"
+        >
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black transition-colors ${isMaster ? 'bg-yellow-500 text-black shadow-[0_0_15px_#eab308]' : 'bg-[#a02a11] text-white'}`}>
+            SG
+          </div>
+          <div className="flex flex-col">
+            <span className={`font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic ${isMaster ? 'text-yellow-500' : 'text-white'}`}>
+              {isMaster ? "MASTER UNLIMITED" : t.tagline}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-8">
           <div className="hidden lg:flex gap-3 bg-white/5 p-1 rounded-full border border-white/10">
             {LANGUAGES.map(l => (
-              <button key={l} onClick={() => setLang(l)} className={`w-8 h-8 rounded-full text-[9px] font-black ${lang === l ? 'bg-[#a02a11]' : 'text-gray-500'}`}>{l}</button>
+              <button key={l} onClick={() => setLang(l)} className={`w-8 h-8 rounded-full text-[9px] font-black transition-all ${lang === l ? 'bg-[#a02a11] text-white' : 'text-gray-500 hover:text-white'}`}>
+                {l}
+              </button>
             ))}
           </div>
 
           <div className="flex items-center gap-6">
-            {user ? (
+            {user || isMaster ? (
               <div className="flex items-center gap-4">
                 <div className="flex flex-col items-end">
-                  <span className="text-[9px] font-black text-white/40 uppercase">{user.name}</span>
-                  <span className="text-[10px] font-black text-[#ffe399] uppercase tracking-widest">{t.creditsLabel}: {isMaster ? '∞' : credits}</span>
+                  <span className="text-[9px] font-black text-white/40 uppercase">{user?.name || "ADMIN"}</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${isMaster ? 'text-yellow-500' : 'text-[#ffe399]'}`}>
+                    {t.creditsLabel}: {isMaster ? '∞' : credits}
+                  </span>
                 </div>
                 <button onClick={handleLogout} className="text-[9px] font-black text-red-500 uppercase hover:underline">{t.logout}</button>
               </div>
             ) : (
-              <button onClick={() => setShowAuth(true)} className="text-[10px] font-black uppercase tracking-widest border border-white/10 px-6 py-2 rounded-full hover:bg-white hover:text-black transition-all">{t.login}</button>
+              <button onClick={() => setShowAuth(true)} className="text-[10px] font-black uppercase tracking-widest border border-white/10 px-6 py-2 rounded-full hover:bg-white hover:text-black transition-all">
+                {t.login}
+              </button>
             )}
-            <button onClick={() => setShowPricing(true)} className="bg-white text-black px-6 py-2 rounded-full font-black text-[9px] uppercase hover:bg-[#a02a11] hover:text-white transition-all">{t.upgradeBtn}</button>
+            {!isMaster && (
+              <button onClick={() => setShowPricing(true)} className="bg-white text-black px-6 py-2 rounded-full font-black text-[9px] uppercase hover:bg-[#a02a11] hover:text-white transition-all">
+                {t.upgradeBtn}
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -170,6 +212,7 @@ export default function App() {
                       <div className={`h-full min-h-[80px] border-2 border-dashed rounded-2xl flex items-center justify-center gap-4 transition-all ${ideaFile ? 'border-green-500/50 bg-green-500/5' : 'border-white/10 hover:border-[#1087a0]'}`}>
                         {ideaFile ? (
                           <div className="flex items-center gap-4 p-4 w-full">
+                            <img src={URL.createObjectURL(ideaFile)} alt="ref" className="w-10 h-10 rounded object-cover border border-white/20" />
                             <span className="text-[10px] font-black uppercase truncate flex-1">{ideaFile.name}</span>
                             <button onClick={(e) => { e.preventDefault(); setIdeaFile(null); }} className="text-red-500 font-black text-[10px] uppercase">{t.removeImage}</button>
                           </div>
