@@ -7,7 +7,7 @@ import { PlatformCard } from './components/PlatformCard';
 import { PricingModal } from './components/PricingModal';
 import { AnalysisView } from './components/AnalysisView';
 
-// Ridotto a 15MB per garantire stabilità con l'invio inline di Google
+// Esteso a 15MB per gestire video più complessi, mantenendo la stabilità
 const MAX_FILE_SIZE_MB = 15;
 
 export default function App() {
@@ -23,25 +23,24 @@ export default function App() {
   const [credits, setCredits] = useState(10);
 
   const handleError = (e: any) => {
+    console.error("Master Debug:", e);
     const msg = e.message || "";
     if (msg.includes("500") || msg.includes("Internal")) {
-      alert("⚠️ ERRORE TECNICO GOOGLE: Il file potrebbe essere troppo complesso o il server è instabile. Riprova con un video più breve o attendi 10 secondi.");
-    } else if (msg.includes("429")) {
-      alert("⚠️ QUOTA LIMITATA: Troppe richieste. Aspetta un minuto.");
+      alert("⚠️ SERVER GOOGLE SATURO: L'analisi video è un processo pesante. Il server ha avuto un timeout. Riprova tra 10 secondi o usa un video leggermente più corto.");
     } else {
-      alert(`❌ MASTER ERROR: ${msg || "Connessione fallita."}`);
+      alert(`❌ MASTER ERROR: ${msg || "Analisi interrotta per motivi tecnici."}`);
     }
   };
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Seleziona prima la piattaforma.");
+    if (!platform) return alert("Seleziona una piattaforma di destinazione.");
     
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`Video troppo grande. Per l'analisi Master, usa file sotto i ${MAX_FILE_SIZE_MB}MB.`);
+      return alert(`File troppo pesante (${(file.size/1024/1024).toFixed(1)}MB). Il limite massimo per l'audit senior è di ${MAX_FILE_SIZE_MB}MB.`);
     }
 
     setLoading(true);
-    setStatus("Analisi Master 2.5...");
+    setStatus("Codifica Stream...");
     setLastFile(file);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
@@ -59,7 +58,7 @@ export default function App() {
     if (!platform) return alert("Scegli piattaforma!");
     if (!ideaText.trim()) return alert("Scrivi la tua idea!");
     setLoading(true);
-    setStatus("Creazione Strategia...");
+    setStatus("Analisi Strategica...");
     try {
       const res = await generateIdea(ideaText, platform, lang);
       setResult(res);
@@ -76,10 +75,10 @@ export default function App() {
       <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-12 shadow-2xl premium-border">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black shadow-[0_0_15px_#a02a11]">SG</div>
-          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Audit • Engine 2.5 Stabile</span>
+          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Master Audit • v2.5 Enterprise</span>
         </div>
         <div className="flex items-center gap-6">
-          <span className="text-[10px] font-black uppercase text-gray-400">CREDITI: {credits}</span>
+          <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">CREDITI RESIDUI: {credits}</span>
           <button onClick={() => setShowPricing(true)} className="bg-white text-black px-6 py-2 rounded-full font-black text-[9px] uppercase tracking-widest hover:bg-[#a02a11] hover:text-white transition-all">UPGRADE</button>
         </div>
       </nav>
@@ -108,9 +107,9 @@ export default function App() {
               {mode === 'VIDEO' ? (
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
-                    <div className="text-6xl group-hover:scale-125 transition-transform duration-500">🎥</div>
-                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video (Max {MAX_FILE_SIZE_MB}MB)</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic tracking-wider">UTILIZZA MOTORE GEMINI 2.5 FLASH</span>
+                    <div className="text-6xl group-hover:scale-125 transition-transform duration-500">🎞️</div>
+                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video Master (Max {MAX_FILE_SIZE_MB}MB)</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic tracking-wider">L'analisi richiede circa 20-30 secondi</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -119,10 +118,10 @@ export default function App() {
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Descrivi la tua idea..."
+                    placeholder="Descrivi la tua idea o il tuo script..."
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
-                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">Genera Strategia</button>
+                  <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">Genera Strategia Virale</button>
                 </div>
               )}
             </div>
@@ -132,8 +131,8 @@ export default function App() {
         {loading && (
           <div className="py-24 flex flex-col items-center gap-10 text-center w-full animate-fadeIn max-w-xl">
             <div className="w-24 h-24 border-[2px] border-[#a02a11] border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-3xl font-black uppercase italic tracking-tighter text-white">{status}</p>
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest animate-pulse">Analisi multimodale dei frame in corso...</p>
+            <p className="text-4xl font-black uppercase italic tracking-tighter text-white">{status}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest animate-pulse">L'AI sta guardando il tuo video frame per frame...</p>
           </div>
         )}
 
