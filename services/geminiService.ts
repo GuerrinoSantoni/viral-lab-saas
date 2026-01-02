@@ -26,7 +26,7 @@ function extractJSON(text: string): any {
       try { return JSON.parse(arrayMatch[0]); } catch { }
     }
     console.error("Errore critico parsing JSON:", text);
-    throw new Error("Errore di formattazione della risposta. Riprova.");
+    throw new Error("Il Master ha generato un output non leggibile. Riprova con un video più breve.");
   }
 }
 
@@ -38,7 +38,7 @@ export async function analyzeVideo(
 ): Promise<AnalysisResult> {
   const ai = getAI();
   
-  onProgress?.("Ottimizzazione stream video...");
+  onProgress?.("Codifica Stream Master...");
   const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -46,38 +46,45 @@ export async function analyzeVideo(
     reader.onerror = () => reject(new Error("Errore durante la lettura del file."));
   });
 
-  onProgress?.("Analisi Senior Master in corso (20y experience)...");
+  onProgress?.("Audit Senior in corso (20y experience)...");
   
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `AGISCI COME UN PRODUTTORE YOUTUBE SENIOR CON 20 ANNI DI ESPERIENZA NEI MEDIA DIGITALI.
-          Analizza questo video per la piattaforma ${platform} in lingua ${lang}. 
-          Sii estremamente tecnico e professionale.
+        { text: `AGISCI COME UN PRODUTTORE YOUTUBE SENIOR CON 20 ANNI DI ESPERIENZA.
+          Analizza questo video per ${platform} in lingua ${lang}. Sii spietato e tecnico.
           
-          DEVI RESTITUIRE RIGOROSAMENTE UN OGGETTO JSON CON QUESTE CHIAVI:
-          {
-            "score": "voto numerico 0-100 basato sulla qualità produttiva",
-            "title": "3 Titoli Magnetici con alto CTR separati da |",
-            "analysis": "Un'analisi tecnica profonda di almeno 400 parole. Commenta il pacing, la color science, la qualità dell'audio e la struttura narrativa (Hook, Body, CTA).",
-            "caption": "Copy persuasivo con tecniche di copywriting avanzato",
-            "hashtags": ["tag1", "tag2", "tag3"],
-            "visualData": "Una cronologia dettagliata di ciò che accade nel video, fondamentale per creare lo storyboard successivo.",
-            "platformSuggestion": "Consiglio specifico per scalare l'algoritmo di ${platform}",
-            "ideaDuration": "Durata consigliata per massimizzare la retention"
-          }` 
+          IL PUNTEGGIO (score) DEVE ESSERE NEL FORMATO "XX/100" (es: "85/100").
+          L'ANALISI (analysis) DEVE ESSERE DI ALMENO 400 PAROLE DETTAGLIATE.` 
         }
       ]
     }],
     config: {
-      responseMimeType: "application/json"
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          score: { type: Type.STRING, description: "Punteggio nel formato XX/100" },
+          title: { type: Type.STRING, description: "Titolo magnetico ad alto CTR" },
+          analysis: { type: Type.STRING, description: "Analisi tecnica profonda di 400+ parole" },
+          caption: { type: Type.STRING, description: "Copy persuasivo per il post" },
+          hashtags: { 
+            type: Type.ARRAY, 
+            items: { type: Type.STRING } 
+          },
+          visualData: { type: Type.STRING, description: "Log dettagliato dei frame per lo storyboard" },
+          platformSuggestion: { type: Type.STRING, description: "Consiglio per l'algoritmo" },
+          ideaDuration: { type: Type.STRING, description: "Durata ideale suggerita" }
+        },
+        required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"]
+      }
     }
   });
 
   const result = extractJSON(response.text);
-  if (!result) throw new Error("Risposta del server non valida.");
+  if (!result) throw new Error("Risposta del server vuota o non valida.");
   return result;
 }
 
@@ -85,8 +92,24 @@ export async function generateIdea(prompt: string, platform: Platform, lang: Lan
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: `PRODUTTORE SENIOR: Crea una strategia virale completa per ${platform} in ${lang} basandoti su: "${prompt}". Rispondi esclusivamente in formato JSON.`,
-    config: { responseMimeType: "application/json" }
+    contents: `PRODUTTORE SENIOR: Crea una strategia virale completa per ${platform} in ${lang} basandoti su: "${prompt}". Rispondi esclusivamente in formato JSON. Il punteggio deve essere XX/100.`,
+    config: { 
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          score: { type: Type.STRING },
+          title: { type: Type.STRING },
+          analysis: { type: Type.STRING },
+          caption: { type: Type.STRING },
+          hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
+          visualData: { type: Type.STRING },
+          platformSuggestion: { type: Type.STRING },
+          ideaDuration: { type: Type.STRING }
+        },
+        required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"]
+      }
+    }
   });
   return extractJSON(response.text);
 }
@@ -95,8 +118,8 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: `Basandoti su questo log visivo: "${visualData}", crea uno storyboard tecnico d'elite in lingua ${lang}.
-    Dividi il contenuto in 6-8 scene chiave. Per ogni scena descrivi l'inquadratura, il movimento di camera, l'audio e la funzione psicologica della scena.`,
+    contents: `PRODUTTORE SENIOR STORYBOARD: Basandoti su: "${visualData}", crea uno storyboard tecnico d'elite in lingua ${lang}.
+    Dividi in 6 scene. Dettaglia inquadratura, audio e SFX.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -105,9 +128,9 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
           type: Type.OBJECT,
           properties: {
             scene: { type: Type.INTEGER },
-            description: { type: Type.STRING, description: "Descrizione visiva tecnica e cinematografica" },
-            audioSFX: { type: Type.STRING, description: "Dettagli audio e script vocale" },
-            duration: { type: Type.STRING, description: "Timecode o durata" }
+            description: { type: Type.STRING },
+            audioSFX: { type: Type.STRING },
+            duration: { type: Type.STRING }
           },
           required: ["scene", "description", "audioSFX", "duration"]
         }
