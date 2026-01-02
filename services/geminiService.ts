@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
-const MODEL_NAME = 'gemini-3-flash-preview';
+// Utilizziamo il modello STABILE che ha quote molto più alte rispetto ai preview
+const MODEL_NAME = 'gemini-flash-latest';
 
 const getAI = () => {
   const apiKey = process.env.API_KEY;
@@ -10,7 +11,6 @@ const getAI = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-// Helper per pulire l'output JSON del modello
 function cleanJSON(text: string): string {
   if (!text) return "{}";
   let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -22,8 +22,20 @@ function cleanJSON(text: string): string {
   return cleaned;
 }
 
-// Funzione di utilità per gestire i ritardi (retry)
-const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
+/**
+ * Esegue l'analisi con un sistema di retry automatico in caso di errore 429
+ */
+async function callWithRetry(fn: () => Promise<any>, retries = 2, delay = 2000): Promise<any> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && (error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED"))) {
+      await new Promise(res => setTimeout(res, delay));
+      return callWithRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+}
 
 export async function analyzeVideo(
   file: File, 
@@ -33,7 +45,7 @@ export async function analyzeVideo(
 ): Promise<AnalysisResult> {
   const ai = getAI();
   
-  onProgress?.("Preparazione pacchetto dati...");
+  onProgress?.("Codifica video...");
   const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -41,91 +53,67 @@ export async function analyzeVideo(
     reader.onerror = reject;
   });
 
-  onProgress?.("Audit Master in corso (Flash Mode)...");
+  onProgress?.("Audit Master in corso...");
   
-  try {
+  return await callWithRetry(async () => {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: [{
         parts: [
           { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
           { text: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA.
-            Analizza questo video per la piattaforma ${platform} in lingua ${lang}.
+            Analizza questo video per ${platform} in ${lang}.
             
-            ESEGUI UN AUDIT PROFESSIONALE COMPLETO:
-            1. Viral Score (0-100).
-            2. 3 Titoli Magnetici.
-            3. Analisi tecnica spietata (min 300 parole).
-            4. Copy persuasivo con hashtag.
-            5. Briefing visivo per storyboard.
-
-            RISPONDI ESCLUSIVAMENTE CON QUESTO JSON:
+            AUDIT RICHIESTO (RISPONDI SOLO IN JSON):
             {
-              "score": "voto",
-              "title": "Titoli | separati | da pipe",
-              "analysis": "audit senior testuale dettagliato",
-              "caption": "copy caption",
+              "score": "voto 0-100",
+              "title": "3 Titoli Magnetici | divisi da pipe",
+              "analysis": "Audit tecnico spietato di 300 parole su montaggio, ritmo e retention",
+              "caption": "Copy persuasivo pronto all'uso",
               "hashtags": ["tag1", "tag2"],
-              "visualData": "briefing visivo per storyboard",
-              "platformSuggestion": "consigli algoritmo",
-              "ideaDuration": "durata ideale"
+              "visualData": "Dettagli visivi per lo storyboard",
+              "platformSuggestion": "Trucco algoritmo",
+              "ideaDuration": "Durata consigliata"
             }` 
           }
         ]
       }],
-      config: { 
-        responseMimeType: "application/json"
-      }
+      config: { responseMimeType: "application/json" }
     });
 
     return JSON.parse(cleanJSON(response.text || "{}"));
-  } catch (error: any) {
-    if (error.message?.includes("429")) {
-      throw new Error("QUOTA_EXCEEDED");
-    }
-    throw error;
-  }
+  });
 }
 
 export async function generateIdea(prompt: string, platform: Platform, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
   
-  try {
+  return await callWithRetry(async () => {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `AGISCI COME UN PRODUTTORE SENIOR CON 20 ANNI DI ESPERIENZA.
-        Crea una strategia virale completa per ${platform} in lingua ${lang} basata su questa idea: "${prompt}".
-        
-        RISPONDI ESCLUSIVAMENTE CON QUESTO OGGETTO JSON:
-        {
-          "score": "potenziale virale 0-100",
-          "title": "3 Titoli Magnetici | separati da pipe",
-          "analysis": "Strategia dettagliata di almeno 300 parole su come realizzare il contenuto",
-          "caption": "Copy pronto per il post",
-          "hashtags": ["tag1", "tag2"],
-          "visualData": "Descrizione visiva per il montaggio",
-          "platformSuggestion": "Suggerimento per l'algoritmo",
-          "ideaDuration": "Durata video consigliata"
-        }`,
-      config: { 
-        responseMimeType: "application/json"
-      }
+      contents: `AGISCI COME PRODUTTORE SENIOR (20Y EXP). Crea strategia per ${platform} in ${lang} su: "${prompt}". Rispondi in JSON:
+      {
+        "score": "0-100",
+        "title": "Titoli | pipe",
+        "analysis": "Strategia completa (300 parole)",
+        "caption": "Copy",
+        "hashtags": ["tag"],
+        "visualData": "Briefing montaggio",
+        "platformSuggestion": "Algoritmo",
+        "ideaDuration": "Durata"
+      }`,
+      config: { responseMimeType: "application/json" }
     });
     
     return JSON.parse(cleanJSON(response.text || "{}"));
-  } catch (error: any) {
-    if (error.message?.includes("429")) {
-      throw new Error("QUOTA_EXCEEDED");
-    }
-    throw error;
-  }
+  });
 }
 
 export async function generateSceneAnalysis(visualData: string, lang: Language): Promise<Scene[]> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: `Basandoti su questo briefing: ${visualData}, crea uno storyboard tecnico in ${lang}. Restituisci un array JSON di oggetti con scene, description, audioSFX, duration.`,
+    contents: `Crea storyboard tecnico in ${lang} basato su: ${visualData}. Restituisci array JSON di 6 scene.`,
     config: { responseMimeType: "application/json" }
   });
   return JSON.parse(cleanJSON(response.text || "[]"));
