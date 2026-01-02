@@ -63,33 +63,33 @@ export const TRANSLATIONS: Record<string, any> = {
     errorServer: "⚠️ SERVER SATURATED: Try again in a few seconds.",
     errorGeneric: "❌ TECHNICAL ERROR: Connection lost."
   },
-  ES: {
+  DE: {
     tagline: "Senior Master Audit",
     mainTitle: "MASTER.",
     mainTitleRed: "AUDIT",
-    modeVideo: "Análisis de Video",
-    modeIdea: "Generador de Ideas",
-    uploadLabel: "Subir Video para Auditoría",
-    ideaLabel: "Generar Estrategia Viral",
-    ideaPlaceholder: "Describe tu idea viral...",
-    creditsLabel: "CRÉDITOS APP",
-    upgradeBtn: "MEJORAR",
-    processing: "Análisis Senior en curso...",
-    encoding: "Codificando Stream...",
-    newAudit: "NUEVA AUDITORÍA",
-    copyBtn: "COPIAR",
-    copiedBtn: "COPIADO",
-    scriptBtn: "DESBLOQUEAR STORYBOARD TÉCNICO",
-    scriptTitle: "ANÁLISIS TÉCNICO DE ESCENAS",
-    viralScore: "PUNTUACIÓN VIRAL",
-    seniorInsight: "VISIÓN SENIOR",
-    strategicCopy: "COPIA ESTRATÉGICA",
-    pricingTitle: "MEJORAR ACTIVOS",
-    pricingSub: "Elige tu plan estratégico",
-    activate: "ACTIVAR AHORA",
-    errorQuota: "⚠️ MASTER AGOTADO: Límite diario alcanzado. Vuelve mañana o mejora a Pro.",
-    errorServer: "⚠️ SERVIDOR SATURADO: Reintenta en unos segundos.",
-    errorGeneric: "❌ ERROR TÉCNICO: Conexión perdida."
+    modeVideo: "Video-Analyse",
+    modeIdea: "Ideengenerator",
+    uploadLabel: "Video zur Prüfung hochladen",
+    ideaLabel: "Virale Strategie generieren",
+    ideaPlaceholder: "Beschreiben Sie Ihre virale Idee...",
+    creditsLabel: "APP-GUTHABEN",
+    upgradeBtn: "UPGRADE",
+    processing: "Senior-Analyse läuft...",
+    encoding: "Stream-Kodierung...",
+    newAudit: "NEUES AUDIT",
+    copyBtn: "KOPIEREN",
+    copiedBtn: "KOPIERT",
+    scriptBtn: "TECHNISCHES STORYBOARD FREISCHALTEN",
+    scriptTitle: "TECHNISCHE SZENENANALYSE",
+    viralScore: "VIRAL SCORE",
+    seniorInsight: "SENIOR INSIGHT",
+    strategicCopy: "STRATEGISCHER TEXT",
+    pricingTitle: "UPGRADE ASSETS",
+    pricingSub: "Wählen Sie Ihren Strategieplan",
+    activate: "JETZT AKTIVIEREN",
+    errorQuota: "⚠️ MASTER ERSCHÖPFT: Tageslimit erreicht. Morgen wiederkommen oder auf Pro upgraden.",
+    errorServer: "⚠️ SERVER ÜBERLASTET: In wenigen Sekunden erneut versuchen.",
+    errorGeneric: "❌ TECHNISCHER FEHLER: Verbindung verloren."
   },
   FR: {
     tagline: "Senior Master Audit",
@@ -117,7 +117,7 @@ export const TRANSLATIONS: Record<string, any> = {
     activate: "ACTIVER MAINTENANT",
     errorQuota: "⚠️ MASTER ÉPUISÉ: Limite quotidienne atteinte. Revenez demain ou passez en Pro.",
     errorServer: "⚠️ SERVEUR SATURÉ: Réessayez dans quelques secondes.",
-    errorGeneric: "❌ ERREUR TECHNIQUE: Connexion perdue."
+    errorGeneric: "❌ ERREUR TECHNIQUE: Connession perdue."
   }
 };
 
