@@ -17,23 +17,22 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
   const [copied, setCopied] = useState(false);
   const t = (TRANSLATIONS[language] || TRANSLATIONS.IT) as any;
 
-  // Assicuriamoci che hashtags sia sempre un array per evitare crash del .map()
   const hashtags = Array.isArray(result.hashtags) ? result.hashtags : [];
 
   const loadScript = async () => {
     setLoadingScript(true);
     try {
       const data = await generateSceneAnalysis(result.visualData, language);
+      if (!data || data.length === 0) throw new Error("Vuoto");
       setScript(data);
     } catch (e) { 
-      console.error(e);
-      alert("Il Master ha generato troppi dati. Riprova tra un momento."); 
+      console.error("Errore Script:", e);
+      alert("⚠️ IL MASTER È OCCUPATO: La generazione dello storyboard è complessa. Riprova tra 5 secondi o accorcia l'idea."); 
     } finally { 
       setLoadingScript(false); 
     }
   };
 
-  // Se result non è valido, mostriamo un errore invece di uno schermo nero
   if (!result || !result.score) {
     return (
       <div className="glass p-12 rounded-[40px] text-center space-y-4">
