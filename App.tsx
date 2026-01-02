@@ -26,20 +26,20 @@ export default function App() {
     
     const msg = e.message || "";
     
-    if (msg.includes("429") || msg.includes("QUOTA")) {
-      alert("⚠️ QUOTA ESAURITA: Troppe richieste. Aspetta 60 secondi.");
-    } else if (msg.includes("API_KEY")) {
-      alert("🔑 ERRORE CHIAVE: La tua API KEY non è configurata correttamente o è scaduta.");
-    } else if (msg.includes("fetch") || msg.includes("network")) {
-      alert("🌐 ERRORE DI RETE: La connessione è stata interrotta durante l'invio del video. Prova un file più leggero.");
+    if (msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED")) {
+      alert("⚠️ AVVISO GOOGLE (429)\n\nIl traffico è intenso. Attendi 30-60 secondi e riprova.\nQuesto succede se carichi molti video in sequenza.");
     } else {
-      // Mostriamo l'errore reale invece di uno generico per capire cosa non va
-      alert(`❌ ERRORE MASTER: ${msg || "Errore sconosciuto durante l'analisi."}`);
+      alert(`❌ ERRORE MASTER: ${msg || "Problema di connessione. Riprova tra un istante."}`);
     }
   };
 
   const handleAnalyzeVideo = async (file: File) => {
     if (!platform) return alert("Scegli piattaforma!");
+    
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      return alert(`File troppo grande! Massimo ${MAX_FILE_SIZE_MB}MB.`);
+    }
+
     setLoading(true);
     setStatus("Analisi Video Master...");
     setLastFile(file);
@@ -57,7 +57,7 @@ export default function App() {
 
   const handleGenerateIdea = async () => {
     if (!platform) return alert("Scegli piattaforma!");
-    if (!ideaText.trim()) return alert("Scrivi idea!");
+    if (!ideaText.trim()) return alert("Scrivi la tua idea!");
     setLoading(true);
     setStatus("Creazione Strategia...");
     try {
@@ -76,7 +76,7 @@ export default function App() {
       <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-12 shadow-2xl premium-border">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-[#a02a11] rounded-lg flex items-center justify-center font-black shadow-[0_0_15px_#a02a11]">SG</div>
-          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Audit • Gemini 3 Flash</span>
+          <span className="font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic">Senior Audit • Stable Engine</span>
         </div>
         <div className="flex items-center gap-6">
           <span className="text-[10px] font-black uppercase text-gray-400">CREDITI: {credits}</span>
@@ -108,9 +108,9 @@ export default function App() {
               {mode === 'VIDEO' ? (
                 <label className="cursor-pointer block">
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
-                    <div className="text-6xl group-hover:scale-125 transition-transform duration-500">🔥</div>
-                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video per l'Audit</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Sistema ultra-stabile Gemini 3</span>
+                    <div className="text-6xl group-hover:scale-125 transition-transform duration-500">💎</div>
+                    <span className="text-xl font-black uppercase tracking-tighter italic">Carica Video per l'Audit (Motore Stabile)</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Sistema ultra-stabile Gemini 1.5 Flash</span>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={!platform} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -119,7 +119,7 @@ export default function App() {
                   <textarea 
                     value={ideaText}
                     onChange={(e) => setIdeaText(e.target.value)}
-                    placeholder="Esempio: Strategia per un canale di cucina tech..."
+                    placeholder="Descrivi la tua idea qui..."
                     className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[150px] focus:border-[#a02a11] transition-all text-white font-medium"
                   />
                   <button onClick={handleGenerateIdea} className="w-full py-5 rounded-2xl font-black uppercase text-xs bg-white text-black hover:bg-[#a02a11] hover:text-white transition-all shadow-xl">Genera Analisi Senior</button>
