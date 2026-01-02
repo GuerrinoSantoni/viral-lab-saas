@@ -2,13 +2,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
+// Utilizziamo i modelli corretti come da documentazione ufficiale
 const MAIN_MODEL = 'gemini-3-flash-preview'; 
-const LITE_MODEL = 'gemini-2.5-flash-lite-latest'; 
+const LITE_MODEL = 'gemini-flash-lite-latest'; 
 
+// Initialize AI following @google/genai guidelines: use process.env.API_KEY directly in the constructor
 const getAI = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) throw new Error("API_KEY_MANCANTE");
-  return new GoogleGenAI({ apiKey });
+  if (!process.env.API_KEY) throw new Error("API_KEY_MANCANTE");
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
 // Definizione dello schema per garantire che i campi siano SEMPRE presenti
@@ -27,15 +28,16 @@ const ANALYSIS_SCHEMA = {
   required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"],
 };
 
+// Extracted text from response is trimmed before parsing
 function cleanAndParse(text: string): any {
   if (!text) return null;
   try {
-    // Rimuove eventuali markdown code blocks se presenti nonostante il mimeType
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(cleanText);
+    // When using responseMimeType: "application/json", backticks are usually absent, but trim is always good
+    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(jsonStr);
   } catch (e) {
     console.error("Errore Parsing JSON:", text);
-    throw new Error("L'AI ha risposto in un formato non valido. Riprova.");
+    throw new Error("Formato AI non valido.");
   }
 }
 
@@ -55,17 +57,15 @@ export async function analyzeVideo(
   });
 
   onProgress?.("Audit Senior in corso...");
+  // Using simplified contents object for generateContent call
   const response = await ai.models.generateContent({
     model: MAIN_MODEL,
-    contents: [{
+    contents: {
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `AGISCI COME UN PRODUTTORE YOUTUBE CON 20 ANNI DI ESPERIENZA. 
-        Analizza questo video per la piattaforma ${platform} in lingua ${lang}. 
-        Sii critico, onesto e brutale se necessario. 
-        Identifica hook, retention e potenziale virale.` }
+        { text: `AGISCI COME UN PRODUTTORE YOUTUBE CON 20 ANNI DI ESPERIENZA. Analizza questo video per ${platform} in lingua ${lang}. Sii brutale e tecnico.` }
       ]
-    }],
+    },
     config: { 
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA
@@ -93,13 +93,12 @@ export async function generateIdea(
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
 
-  parts.push({ text: `PRODUTTORE SENIOR: Crea una strategia virale per ${platform} in lingua ${lang}. 
-  Usa questo input: "${prompt}". 
-  Definisci un concept che spacca il mercato.` });
+  parts.push({ text: `PRODUTTORE SENIOR: Crea una strategia virale per ${platform} in lingua ${lang} basata su: "${prompt}".` });
 
+  // Correct contents structure with parts array
   const response = await ai.models.generateContent({
     model: MAIN_MODEL,
-    contents: [{ parts }],
+    contents: { parts },
     config: { 
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA
@@ -110,10 +109,13 @@ export async function generateIdea(
 
 export async function generateSceneAnalysis(visualData: string, lang: Language): Promise<Scene[]> {
   const ai = getAI();
+  // Using direct text input for contents
   const response = await ai.models.generateContent({
-    model: LITE_MODEL,
-    contents: `PRODUTTORE SENIOR: Crea uno storyboard tecnico di 6 scene basato su: "${visualData}". 
-    Lingua: ${lang}. Restituisci un array di oggetti con scene, description, audioSFX, duration.`,
+    model: MAIN_MODEL,
+    contents: `PRODUTTORE SENIOR: Crea uno storyboard tecnico di 6 scene dettagliate. 
+        Input visivo: "${visualData}". 
+        Lingua: ${lang}. 
+        Sii specifico su inquadrature e audio.`,
     config: { 
       responseMimeType: "application/json",
       responseSchema: {
