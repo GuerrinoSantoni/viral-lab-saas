@@ -44,8 +44,8 @@ export const TRANSLATIONS = {
 };
 
 export const PRICING_TIERS = [
-  { id: 'free', name: 'Free Strategy', price: '€0', credits: 3, features: ['3 Audit / Mese', 'Analisi Senior AI'], popular: false },
-  { id: 'entry', name: 'Entry Growth', price: '€19', credits: 12, features: ['Priorità Elaborazione', 'Analisi Scene'], popular: false },
-  { id: 'medium', name: 'Medium Authority', price: '€49', credits: 40, features: ['Analisi Strategica Pro', 'Supporto Prioritario'], popular: true },
-  { id: 'premium', name: 'Premium Master', price: '€99', credits: 120, features: ['White Label Report', 'Competitor Audit'], popular: false }
+  { id: 'free', name: 'Starter Executive', price: '€0', credits: 3, features: ['Audit Video AI', 'Analisi Senior'], popular: false },
+  { id: 'entry', name: 'Entry Growth', price: '€19', credits: 12, features: ['Audit Video AI', 'Analisi Senior'], popular: false },
+  { id: 'medium', name: 'Pro Authority', price: '€49', credits: 40, features: ['Audit Video AI', 'Analisi Senior'], popular: true },
+  { id: 'premium', name: 'Master Strategic', price: '€99', credits: 120, features: ['Audit Video AI', 'Analisi Senior'], popular: false }
 ];
