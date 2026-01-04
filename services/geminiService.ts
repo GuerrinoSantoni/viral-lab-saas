@@ -2,17 +2,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
-// Utilizziamo i modelli corretti come da documentazione ufficiale
 const MAIN_MODEL = 'gemini-3-flash-preview'; 
-const LITE_MODEL = 'gemini-flash-lite-latest'; 
 
-// Initialize AI following @google/genai guidelines: use process.env.API_KEY directly in the constructor
 const getAI = () => {
   if (!process.env.API_KEY) throw new Error("API_KEY_MANCANTE");
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
-// Definizione dello schema per garantire che i campi siano SEMPRE presenti
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -28,11 +24,9 @@ const ANALYSIS_SCHEMA = {
   required: ["score", "title", "analysis", "caption", "hashtags", "visualData", "platformSuggestion", "ideaDuration"],
 };
 
-// Extracted text from response is trimmed before parsing
 function cleanAndParse(text: string): any {
   if (!text) return null;
   try {
-    // When using responseMimeType: "application/json", backticks are usually absent, but trim is always good
     const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(jsonStr);
   } catch (e) {
@@ -57,13 +51,12 @@ export async function analyzeVideo(
   });
 
   onProgress?.("Audit Senior in corso...");
-  // Using simplified contents object for generateContent call
   const response = await ai.models.generateContent({
     model: MAIN_MODEL,
     contents: {
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `AGISCI COME UN PRODUTTORE YOUTUBE CON 20 ANNI DI ESPERIENZA. Analizza questo video per ${platform} in lingua ${lang}. Sii brutale e tecnico.` }
+        { text: `AGISCI COME UN PRODUTTORE YOUTUBE CON 20 ANNI DI ESPERIENZA. Analizza questo video per ${platform} in lingua ${lang}. Sii brutale, tecnico e strategico.` }
       ]
     },
     config: { 
@@ -93,9 +86,8 @@ export async function generateIdea(
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
 
-  parts.push({ text: `PRODUTTORE SENIOR: Crea una strategia virale per ${platform} in lingua ${lang} basata su: "${prompt}".` });
+  parts.push({ text: `PRODUTTORE SENIOR: Crea una strategia virale per ${platform} in lingua ${lang} basata su: "${prompt}". Esplora angoli creativi mai visti.` });
 
-  // Correct contents structure with parts array
   const response = await ai.models.generateContent({
     model: MAIN_MODEL,
     contents: { parts },
@@ -109,13 +101,17 @@ export async function generateIdea(
 
 export async function generateSceneAnalysis(visualData: string, lang: Language): Promise<Scene[]> {
   const ai = getAI();
-  // Using direct text input for contents
   const response = await ai.models.generateContent({
     model: MAIN_MODEL,
-    contents: `PRODUTTORE SENIOR: Crea uno storyboard tecnico di 6 scene dettagliate. 
-        Input visivo: "${visualData}". 
-        Lingua: ${lang}. 
-        Sii specifico su inquadrature e audio.`,
+    contents: `AGISCI COME UN REGISTA E DIRETTORE DELLA FOTOGRAFIA SENIOR. 
+        Crea uno storyboard tecnico cinematografico di 6 scene basato su questo input: "${visualData}".
+        
+        REGOLE MANDATORIE PER OGNI SCENA:
+        1. DESCRIZIONE VISIVA (Minimo 100 parole): Devi descrivere l'inquadratura (es. Close-up 85mm, Wide Shot 24mm), il movimento di camera (Pan, Tilt, Tracking Shot), l'illuminazione (Key light, Rim light), il color grading suggerito e l'azione specifica del soggetto.
+        2. AUDIO STRATEGY (Estremamente dettagliato): Descrivi il sound design stratificato (Foley di passi, rumori ambientali, effetti glitch), il tipo di musica e il tono esatto della voce (es. sussurrato, autoritario, ritmato).
+        3. Lingua: ${lang}.
+        
+        Sii professionale, visivo e tecnico. Non risparmiare parole.`,
     config: { 
       responseMimeType: "application/json",
       responseSchema: {
@@ -124,8 +120,8 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
           type: Type.OBJECT,
           properties: {
             scene: { type: Type.NUMBER },
-            description: { type: Type.STRING },
-            audioSFX: { type: Type.STRING },
+            description: { type: Type.STRING, description: "Descrizione visiva tecnica di almeno 100 parole" },
+            audioSFX: { type: Type.STRING, description: "Strategia audio e sound design dettagliata" },
             duration: { type: Type.STRING },
           },
           required: ["scene", "description", "audioSFX", "duration"]
