@@ -1,5 +1,4 @@
 
-// Add React import to fix 'Cannot find namespace React'
 import React, { useState } from 'react';
 import { AnalysisResult, Language, Scene } from '../types';
 import { TRANSLATIONS } from '../constants';
@@ -18,7 +17,6 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
   const [copied, setCopied] = useState(false);
   const t = (TRANSLATIONS[language] || TRANSLATIONS.IT) as any;
 
-  // Garantisce che hashtags e score esistano sempre
   const hashtags = Array.isArray(result?.hashtags) ? result.hashtags : [];
   const displayScore = result?.score || "N/A";
 
@@ -36,13 +34,12 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
     }
   };
 
-  // Se l'oggetto result è completamente rotto, mostriamo l'errore
   if (!result || (!result.score && !result.analysis)) {
     return (
       <div className="glass p-12 rounded-[40px] text-center space-y-4 max-w-md">
         <div className="text-6xl mb-4">⚠️</div>
         <p className="text-[#a02a11] font-black uppercase tracking-widest">ERRORE GENERAZIONE AI</p>
-        <p className="text-gray-500 text-[10px] uppercase">Il modello non ha restituito dati validi. Potrebbe esserci un sovraccarico dei server Google.</p>
+        <p className="text-gray-500 text-[10px] uppercase">Il modello non ha restituito dati validi. Riprova.</p>
         <button onClick={onReset} className="w-full mt-4 bg-white text-black px-8 py-3 rounded-xl font-bold uppercase text-[10px] hover:bg-[#a02a11] hover:text-white transition-all">Torna Indietro</button>
       </div>
     );
@@ -80,7 +77,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
       <div className="grid lg:grid-cols-1 gap-8">
         <div className="glass p-10 rounded-[40px] border-l-8 border-[#a02a11]">
           <h3 className="text-[12px] font-black uppercase text-[#a02a11] mb-6 tracking-[0.4em]">SENIOR INSIGHT</h3>
-          <p className="text-gray-200 italic text-lg leading-relaxed font-medium whitespace-pre-wrap">
+          <p className="text-gray-200 italic text-xl leading-relaxed font-medium whitespace-pre-wrap">
             {result.analysis || "Analisi non disponibile."}
           </p>
         </div>
@@ -89,7 +86,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="glass p-8 rounded-[40px] border-t-4 border-[#ffe399]">
           <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-6 tracking-widest">CONTENT STRUCTURE</h3>
-          <p className="text-gray-200 text-sm leading-relaxed font-bold uppercase tracking-tight opacity-80">
+          <p className="text-gray-300 text-sm leading-relaxed font-bold uppercase tracking-tight opacity-90">
             {result.visualData || "Struttura visiva non generata."}
           </p>
         </div>
@@ -131,45 +128,53 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
           </button>
         </div>
       ) : (
-        <div className="space-y-16">
+        <div className="space-y-24">
           <div className="text-center space-y-4">
-            <h3 className="text-5xl font-black uppercase tracking-tighter italic leading-none">STORYBOARD TECNICO</h3>
-            <p className="text-[#1087a0] font-black text-[10px] uppercase tracking-[0.5em]">Senior Master Storyboard • {script.length} Scene</p>
+            <h3 className="text-6xl font-black uppercase tracking-tighter italic leading-none">STORYBOARD TECNICO</h3>
+            <p className="text-[#1087a0] font-black text-[12px] uppercase tracking-[0.5em]">Senior Master Storyboard • Cinematic Standard</p>
           </div>
           {script.map((s, i) => (
-            <div key={i} className="glass p-12 rounded-[50px] border border-white/5 hover:border-[#a02a11]/30 transition-all group relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-5 text-8xl font-black italic select-none group-hover:opacity-10 transition-opacity">0{s.scene}</div>
-              <div className="flex items-center gap-6 mb-12 relative z-10">
-                <div className="w-16 h-16 bg-[#a02a11] rounded-2xl flex items-center justify-center font-black text-2xl shadow-xl">SCENA {s.scene}</div>
-                <div className="h-px flex-1 bg-gradient-to-r from-[#a02a11] to-transparent"></div>
-                <div className="bg-white/5 px-6 py-2 rounded-full border border-white/10">
-                  <span className="text-[10px] font-black text-[#1087a0] uppercase tracking-widest">{s.duration}</span>
+            <div key={i} className="glass p-12 md:p-16 rounded-[60px] border border-white/5 hover:border-[#a02a11]/30 transition-all group relative overflow-hidden bg-gradient-to-br from-white/[0.01] to-transparent">
+              <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-[12rem] font-black italic select-none pointer-events-none">0{s.scene}</div>
+              
+              <div className="flex items-center gap-6 mb-16 relative z-10">
+                <div className="bg-[#a02a11] text-white px-10 py-4 rounded-2xl font-black text-2xl shadow-2xl tracking-tighter">SCENA {s.scene}</div>
+                <div className="h-px flex-1 bg-gradient-to-r from-[#a02a11] to-transparent opacity-30"></div>
+                <div className="bg-white/5 px-8 py-3 rounded-full border border-white/10 flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  <span className="text-[12px] font-black text-gray-300 uppercase tracking-widest">{s.duration}</span>
                 </div>
               </div>
-              <div className="grid lg:grid-cols-2 gap-12 relative z-10">
-                <div className="space-y-6 bg-white/[0.02] p-8 rounded-3xl border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">📽️</span>
-                    <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Visione Cinematografica</span>
+
+              <div className="grid lg:grid-cols-5 gap-16 relative z-10">
+                <div className="lg:col-span-3 space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-xl">📽️</div>
+                    <span className="text-[12px] font-black text-[#ffe399] uppercase tracking-[0.3em]">Visione Cinematografica (Senior Director)</span>
                   </div>
-                  <p className="text-gray-300 text-[15px] leading-[1.8] font-medium whitespace-pre-wrap border-l-2 border-[#a02a11] pl-6 italic">
-                    {s.description}
-                  </p>
+                  <div className="bg-black/20 p-10 rounded-[40px] border border-white/5">
+                    <p className="text-gray-100 text-[17px] leading-[1.8] font-medium whitespace-pre-wrap first-letter:text-4xl first-letter:font-black first-letter:text-[#a02a11] first-letter:mr-1">
+                      {s.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-6 bg-[#1087a0]/5 p-8 rounded-3xl border border-[#1087a0]/10">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">🔊</span>
-                    <span className="text-[10px] font-black text-[#1087a0] uppercase tracking-[0.3em]">Audio Strategy & SFX</span>
+
+                <div className="lg:col-span-2 space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-[#1087a0]/10 flex items-center justify-center text-xl">🔊</div>
+                    <span className="text-[12px] font-black text-[#1087a0] uppercase tracking-[0.3em]">Audio Strategy & SFX</span>
                   </div>
-                  <p className="text-gray-300 text-[15px] leading-[1.8] font-medium whitespace-pre-wrap border-l-2 border-[#1087a0] pl-6">
-                    {s.audioSFX}
-                  </p>
+                  <div className="bg-[#1087a0]/5 p-10 rounded-[40px] border border-[#1087a0]/10 h-full">
+                    <p className="text-gray-300 text-[15px] leading-[1.8] font-medium italic border-l-4 border-[#1087a0] pl-8">
+                      {s.audioSFX}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
           <div className="flex justify-center pt-12">
-             <button onClick={() => setScript(null)} className="bg-white/5 text-gray-500 px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-widest hover:text-white transition-all border border-white/5">Torna al Report Generale</button>
+             <button onClick={() => setScript(null)} className="bg-white/5 text-gray-500 px-12 py-5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] hover:text-white transition-all border border-white/5 hover:border-white/20">Chiudi Storyboard Tecnico</button>
           </div>
         </div>
       )}
