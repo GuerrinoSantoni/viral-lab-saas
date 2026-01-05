@@ -50,7 +50,7 @@ export default function App() {
       const newState = !isMaster;
       setIsMaster(newState);
       setClickCount(0);
-      alert(newState ? "MASTER MODE ATTIVATA: CREDITI ILLIMITATI" : "MASTER MODE DISATTIVATA");
+      alert(newState ? t.masterModeOn : t.masterModeOff);
     }
     const timer = setTimeout(() => setClickCount(0), 2000);
     return () => clearTimeout(timer);
@@ -87,41 +87,39 @@ export default function App() {
   };
 
   const handleAnalyzeVideo = async (file: File) => {
-    if (!platform) return alert("Seleziona una piattaforma.");
+    if (!platform) return alert(t.errorSelectPlatform);
     if (!checkAccess()) return;
     
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return alert(`Il video è troppo pesante. Massimo ${MAX_FILE_SIZE_MB}MB.`);
+      return alert(t.errorVideoSize);
     }
 
     setLoading(true);
-    setStatus(t.encoding || "Caricamento...");
+    setStatus(t.encoding);
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      console.error(e);
-      alert(e.message || "Errore sconosciuto durante l'audit.");
+      alert(e.message || t.genError);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGenerateIdea = async () => {
-    if (!platform) return alert("Seleziona una piattaforma.");
+    if (!platform) return alert(t.errorSelectPlatform);
     if (!checkAccess()) return;
-    if (!ideaText.trim() && !ideaFile) return alert("Scrivi un'idea o carica un'immagine!");
+    if (!ideaText.trim() && !ideaFile) return alert(t.errorEmptyIdea);
     
     setLoading(true);
-    setStatus(t.processing || "Generazione...");
+    setStatus(t.processing);
     try {
       const res = await generateIdea(ideaText, platform, lang, ideaFile || undefined);
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      console.error(e);
-      alert(e.message || "Errore nella generazione dell'idea.");
+      alert(e.message || t.genError);
     } finally {
       setLoading(false);
     }
@@ -197,7 +195,7 @@ export default function App() {
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
                     <div className="text-6xl group-hover:scale-125 transition-transform">🎞️</div>
                     <span className="text-xl font-black uppercase italic">{t.uploadLabel}</span>
-                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Max {MAX_FILE_SIZE_MB}MB • Audit Senior 3.0</p>
+                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Max {MAX_FILE_SIZE_MB}MB</p>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={loading} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -235,7 +233,7 @@ export default function App() {
             </div>
             <div className="space-y-4">
               <p className="text-4xl font-black uppercase italic tracking-tighter text-gradient">{status}</p>
-              <p className="text-[10px] text-gray-500 uppercase tracking-[0.5em] animate-pulse">Master AI Logic Processing...</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-[0.5em] animate-pulse">{t.masterProcessing}</p>
             </div>
           </div>
         )}
