@@ -33,7 +33,6 @@ export default function App() {
     return saved !== null ? parseInt(saved) : 0;
   });
 
-  // MASTER MODE STATE
   const [isMaster, setIsMaster] = useState(() => localStorage.getItem('sg_master') === 'true');
   const [clickCount, setClickCount] = useState(0);
 
@@ -44,7 +43,6 @@ export default function App() {
   useEffect(() => { localStorage.setItem('sg_lang', lang); }, [lang]);
   useEffect(() => { localStorage.setItem('sg_user', JSON.stringify(user)); }, [user]);
 
-  // Gestione attivazione Master Mode
   const handleLogoClick = () => {
     const newCount = clickCount + 1;
     setClickCount(newCount);
@@ -54,7 +52,6 @@ export default function App() {
       setClickCount(0);
       alert(newState ? "MASTER MODE ATTIVATA: CREDITI ILLIMITATI" : "MASTER MODE DISATTIVATA");
     }
-    // Reset contatore dopo 2 secondi di inattività
     const timer = setTimeout(() => setClickCount(0), 2000);
     return () => clearTimeout(timer);
   };
@@ -62,7 +59,7 @@ export default function App() {
   const handleLogin = (newUser: User) => {
     setUser(newUser);
     setShowAuth(false);
-    if (credits === 0) setCredits(3); // Bonus primo accesso
+    if (credits === 0) setCredits(3);
   };
 
   const handleLogout = () => {
@@ -77,7 +74,7 @@ export default function App() {
   };
 
   const checkAccess = () => {
-    if (isMaster) return true; // Bypass totale se Master
+    if (isMaster) return true;
     if (!user) {
       setShowAuth(true);
       return false;
@@ -93,14 +90,20 @@ export default function App() {
     if (!platform) return alert("Seleziona una piattaforma.");
     if (!checkAccess()) return;
     
+    // Check file size
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      return alert(`Il video è troppo pesante. Massimo ${MAX_FILE_SIZE_MB}MB.`);
+    }
+
     setLoading(true);
     setStatus(t.encoding);
     try {
-      const res = await analyzeVideo(file, platform, lang);
+      const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      alert("Errore Master Audit: " + e.message);
+      console.error(e);
+      alert("⚠️ ANALISI INTERROTTA: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -118,7 +121,8 @@ export default function App() {
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
-      alert("Errore Master Idea: " + e.message);
+      console.error(e);
+      alert("⚠️ ERRORE GENERAZIONE: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -126,16 +130,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center bg-[#000] text-white">
-      {/* Navbar con Logo cliccabile per Master Mode */}
       <nav className="w-full max-w-7xl glass px-8 py-5 rounded-[30px] flex justify-between items-center mb-12 shadow-2xl premium-border">
-        <div 
-          className="flex items-center gap-4 cursor-pointer select-none active:scale-95 transition-transform" 
-          onClick={handleLogoClick}
-          title="Master Access"
-        >
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black transition-colors ${isMaster ? 'bg-yellow-500 text-black shadow-[0_0_15px_#eab308]' : 'bg-[#a02a11] text-white'}`}>
-            SG
-          </div>
+        <div className="flex items-center gap-4 cursor-pointer select-none active:scale-95 transition-transform" onClick={handleLogoClick}>
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black transition-colors ${isMaster ? 'bg-yellow-500 text-black shadow-[0_0_15px_#eab308]' : 'bg-[#a02a11] text-white'}`}>SG</div>
           <div className="flex flex-col">
             <span className={`font-black text-[10px] uppercase tracking-[0.3em] hidden sm:block italic ${isMaster ? 'text-yellow-500' : 'text-white'}`}>
               {isMaster ? "MASTER UNLIMITED" : t.tagline}
@@ -201,6 +198,7 @@ export default function App() {
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
                     <div className="text-6xl group-hover:scale-125 transition-transform">🎞️</div>
                     <span className="text-xl font-black uppercase italic">{t.uploadLabel}</span>
+                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Max {MAX_FILE_SIZE_MB}MB • Audit Senior 3.0</p>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={loading} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
@@ -231,9 +229,15 @@ export default function App() {
         )}
 
         {loading && (
-          <div className="py-24 flex flex-col items-center gap-10 text-center w-full">
-            <div className="w-24 h-24 border-[2px] border-[#a02a11] border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-4xl font-black uppercase italic tracking-tighter">{status}</p>
+          <div className="py-24 flex flex-col items-center gap-10 text-center w-full max-w-xl mx-auto">
+            <div className="relative">
+              <div className="w-32 h-32 border-[4px] border-[#a02a11]/20 rounded-full"></div>
+              <div className="absolute top-0 w-32 h-32 border-[4px] border-[#a02a11] border-t-transparent rounded-full animate-spin shadow-[0_0_20px_#a02a11]"></div>
+            </div>
+            <div className="space-y-4">
+              <p className="text-4xl font-black uppercase italic tracking-tighter text-gradient">{status}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-[0.5em] animate-pulse">Master AI Logic Processing...</p>
+            </div>
           </div>
         )}
 
