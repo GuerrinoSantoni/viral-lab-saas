@@ -106,16 +106,16 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass p-10 rounded-[40px] border-t-4 border-[#ffe399] flex flex-col min-h-[500px]">
+        <div className="glass p-10 rounded-[40px] border-t-4 border-[#ffe399] flex flex-col">
           <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-8 tracking-widest">{t.contentStructure}</h3>
           <div className="flex-1 overflow-y-auto custom-scrollbar pr-4">
-            <p className="text-gray-100 text-[16px] leading-[2] font-bold uppercase tracking-tight opacity-90 whitespace-pre-wrap">
+            <p className="text-gray-100 text-[15px] leading-[1.8] font-bold uppercase tracking-tight opacity-90 whitespace-pre-wrap">
               {result.visualData}
             </p>
           </div>
         </div>
 
-        <div className="glass p-10 rounded-[40px] border-t-4 border-[#1087a0] flex flex-col min-h-[500px]">
+        <div className="glass p-10 rounded-[40px] border-t-4 border-[#1087a0] flex flex-col">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-[10px] font-black uppercase text-[#1087a0] tracking-widest">{t.copywritingTitle}</h3>
             <button 
@@ -126,10 +126,10 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
             </button>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar pr-4">
-            <p className="text-gray-200 text-lg leading-[1.9] whitespace-pre-wrap italic font-serif">
+            <p className="text-gray-200 text-lg leading-[1.7] whitespace-pre-wrap italic font-serif">
               {result.caption}
             </p>
-            <div className="mt-12 pt-8 border-t border-white/5 flex flex-wrap gap-3">
+            <div className="mt-8 pt-6 border-t border-white/5 flex flex-wrap gap-3">
               {Array.isArray(result.hashtags) && result.hashtags.map((tag, i) => (
                 <span key={i} className="text-[#1087a0] text-[11px] font-black uppercase tracking-tighter bg-[#1087a0]/5 px-3 py-1 rounded-md">#{tag.replace('#', '')}</span>
               ))}
