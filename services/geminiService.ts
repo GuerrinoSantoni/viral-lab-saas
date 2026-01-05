@@ -12,10 +12,10 @@ const getAI = () => {
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    score: { type: Type.STRING },
+    score: { type: Type.STRING, description: "Solo il numero da 0 a 100, senza simboli o slash." },
     title: { type: Type.STRING },
     analysis: { type: Type.STRING },
-    caption: { type: Type.STRING },
+    caption: { type: Type.STRING, description: "Testo di copywriting persuasivo di almeno 50-80 parole." },
     hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
     visualData: { type: Type.STRING },
     platformSuggestion: { type: Type.STRING },
@@ -37,16 +37,17 @@ function cleanAndParse(text: string): any {
 
 const SENIOR_SYSTEM_INSTRUCTION = `Sei il 'Gran Maestro dei Social Media', un Executive Producer con 20 anni di successi mondiali. 
 REGOLE DI RISPOSTA:
-1. Sii incisivo ma tecnico. Le sezioni di analisi devono essere di circa 100-120 parole, dense di valore senza essere ripetitive.
-2. Usa gergo da industria cinematografica e marketing avanzato.
-3. La tua critica deve essere autorevole e precisa.`;
+1. Sii incisivo ma tecnico. Le sezioni di analisi devono essere di circa 100 parole.
+2. Il campo 'caption' deve essere un capolavoro di copywriting di ALMENO 50-80 parole.
+3. Il campo 'score' deve essere ESCLUSIVAMENTE un numero tra 0 e 100.
+4. Usa gergo da industria cinematografica e marketing avanzato.`;
 
 export async function translateAnalysis(data: AnalysisResult, targetLang: Language): Promise<AnalysisResult> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Traduci integralmente questo report in ${targetLang}. 
-    MANTENERE LO STILE TECNICO SENIOR E AUTOREVOLE. Mantieni la lunghezza del testo originale.
+    MANTENERE LO STILE TECNICO SENIOR E AUTOREVOLE. Mantieni la lunghezza e il dettaglio, specialmente nel copywriting.
     JSON: ${JSON.stringify(data)}` }],
     config: { 
       responseMimeType: "application/json",
@@ -106,8 +107,11 @@ export async function analyzeVideo(
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
         { text: `Esegui un Master Audit Senior per ${platform} in ${lang}. 
-        REQUISITO: Scrivi circa 100-120 parole per l'analisi strategica, la struttura visiva e il copywriting. 
-        Sii tecnico, evita ripetizioni e vai dritto al punto con autorità.` }
+        REQUISITI MANDATORI: 
+        - Score: un numero da 0 a 100.
+        - Analisi Strategica: 100 parole.
+        - Copywriting (caption): ALMENO 60 parole ad alta conversione.
+        Sii tecnico e brutale.` }
       ]
     },
     config: { 
@@ -136,7 +140,7 @@ export async function generateIdea(
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
   parts.push({ text: `Crea strategia virale per ${platform} in ${lang}: "${prompt}". 
-  Voglio una pianificazione tecnica di circa 100 parole per ogni sezione del report.` });
+  MANDATORIO: Il campo caption deve essere lungo almeno 60 parole. Lo score deve essere un numero puro tra 0 e 100.` });
 
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
