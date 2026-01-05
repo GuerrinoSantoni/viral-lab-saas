@@ -2,9 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
-// Modello pro per task complessi e analisi video multimodale più stabile
+// Utilizziamo Gemini 3 Flash per tutto: è estremamente veloce e ha limiti di quota molto più alti del Pro.
 const PRIMARY_MODEL = 'gemini-3-flash-preview'; 
-const PRO_MODEL = 'gemini-3-pro-preview';
 
 const getAI = () => {
   if (!process.env.API_KEY) throw new Error("API_KEY_MANCANTE");
@@ -14,10 +13,10 @@ const getAI = () => {
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    score: { type: Type.STRING, description: "Solo il numero da 0 a 100, senza simboli o slash." },
+    score: { type: Type.STRING },
     title: { type: Type.STRING },
     analysis: { type: Type.STRING },
-    caption: { type: Type.STRING, description: "Testo di copywriting persuasivo di almeno 50-80 parole." },
+    caption: { type: Type.STRING },
     hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
     visualData: { type: Type.STRING },
     platformSuggestion: { type: Type.STRING },
@@ -49,7 +48,7 @@ export async function translateAnalysis(data: AnalysisResult, targetLang: Langua
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Traduci integralmente questo report in ${targetLang}. 
-    MANTENERE LO STILE TECNICO SENIOR E AUTOREVOLE. Mantieni la lunghezza e il dettaglio, specialmente nel copywriting.
+    MANTENERE LO STILE TECNICO SENIOR E AUTOREVOLE.
     JSON: ${JSON.stringify(data)}` }],
     config: { 
       responseMimeType: "application/json",
@@ -66,7 +65,6 @@ export async function translateScenes(scenes: Scene[], targetLang: Language): Pr
     model: PRIMARY_MODEL,
     contents: [{ text: `Traduci queste scene di storyboard in ${targetLang}. 
     MANTENI IL LIVELLO DI DETTAGLIO ESTREMO (100+ parole per scena). 
-    Mantieni i dettagli tecnici per regia e audio.
     JSON: ${JSON.stringify(scenes)}` }],
     config: { 
       responseMimeType: "application/json",
@@ -104,19 +102,15 @@ export async function analyzeVideo(
     reader.onerror = (error) => reject(error);
   });
 
-  // Usiamo il modello Pro per l'analisi video perché è più robusto con file multimodali pesanti
-  // e meno propenso a errori 500 "Internal Error" durante il parsing di video + JSON schema.
+  // Usiamo il modello Flash: quota alta, zero attese, perfetto per la versione free.
   const response = await ai.models.generateContent({
-    model: PRO_MODEL,
+    model: PRIMARY_MODEL,
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
         { text: `Esegui un Master Audit Senior per ${platform} in ${lang}. 
-        REQUISITI MANDATORI: 
-        - Score: un numero da 0 a 100.
-        - Analisi Strategica: circa 100 parole.
-        - Copywriting (caption): ALMENO 60 parole ad alta conversione.
-        Sii tecnico e brutale nell'audit video.` }
+        REQUISITI: Score 0-100, Analisi tecnica di 100 parole, Copywriting di almeno 60 parole. 
+        Analizza con occhio clinico da veterano del settore.` }
       ]
     }],
     config: { 
@@ -127,7 +121,7 @@ export async function analyzeVideo(
   });
   
   if (!response.text) {
-    throw new Error("L'API non ha restituito testo. Riprova con un video più breve.");
+    throw new Error("L'IA non ha risposto. Riprova con un video più leggero.");
   }
 
   return { ...cleanAndParse(response.text), lang };
@@ -171,9 +165,9 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
     contents: [{ text: `Agisci come un Regista e Sound Designer Senior. 
     Crea uno storyboard tecnico di 5-10 scene in ${lang} basato su: "${visualData}". 
     REGOLE PER OGNI SCENA:
-    - DESCRIZIONE VISIVA: Minimo 120 parole di dettagli tecnici su lenti, movimenti camera, luci e recitazione.
-    - AUDIO/SFX: Minimo 80 parole sulla strategia sonora, livelli decibel, sound layers e musica. 
-    Sii estremamente tecnico e prolisso.` }],
+    - DESCRIZIONE VISIVA: Minimo 120 parole di dettagli tecnici.
+    - AUDIO/SFX: Minimo 80 parole sulla strategia sonora.
+    Sii estremamente tecnico.` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: {
