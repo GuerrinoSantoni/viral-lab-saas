@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AnalysisResult, Language, Scene } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { generateSceneAnalysis } from '../services/geminiService';
+import { generateSceneAnalysis, translateAnalysis } from '../services/geminiService';
 
 interface Props {
   result: AnalysisResult;
@@ -11,11 +11,13 @@ interface Props {
   onReset: () => void;
 }
 
-export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onReset }) => {
+export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile, language, onReset }) => {
+  const [result, setResult] = useState<AnalysisResult>(initialResult);
   const [loadingScript, setLoadingScript] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const [script, setScript] = useState<Scene[] | null>(null);
   const [copied, setCopied] = useState(false);
-  const t = (TRANSLATIONS[language] || TRANSLATIONS.IT) as any;
+  const t = (TRANSLATIONS[language] || TRANSLATIONS.IT);
 
   const hashtags = Array.isArray(result?.hashtags) ? result.hashtags : [];
   const displayScore = result?.score || "N/A";
@@ -24,13 +26,24 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
     setLoadingScript(true);
     try {
       const data = await generateSceneAnalysis(result.visualData, language);
-      if (!data || data.length === 0) throw new Error("Vuoto");
       setScript(data);
     } catch (e) { 
-      console.error("Errore Script:", e);
-      alert("⚠️ IL MASTER È OCCUPATO: La generazione dello storyboard è complessa. Riprova tra 5 secondi."); 
+      alert("⚠️ IL MASTER È OCCUPATO: Riprova tra 5 secondi."); 
     } finally { 
       setLoadingScript(false); 
+    }
+  };
+
+  const handleTranslateReport = async () => {
+    setTranslating(true);
+    try {
+      const translated = await translateAnalysis(result, language);
+      setResult(translated);
+      setScript(null); // Reset script in case it was in another language
+    } catch (e) {
+      alert("Errore durante la traduzione.");
+    } finally {
+      setTranslating(false);
     }
   };
 
@@ -39,7 +52,6 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
       <div className="glass p-12 rounded-[40px] text-center space-y-4 max-w-md">
         <div className="text-6xl mb-4">⚠️</div>
         <p className="text-[#a02a11] font-black uppercase tracking-widest">ERRORE GENERAZIONE AI</p>
-        <p className="text-gray-500 text-[10px] uppercase">Dati non validi. Riprova.</p>
         <button onClick={onReset} className="w-full mt-4 bg-white text-black px-8 py-3 rounded-xl font-bold uppercase text-[10px] hover:bg-[#a02a11] hover:text-white transition-all">Torna Indietro</button>
       </div>
     );
@@ -48,8 +60,18 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
   return (
     <div className="w-full space-y-12 animate-fadeIn pb-24">
       <div className="flex justify-between items-center glass p-5 rounded-3xl">
-        <button onClick={onReset} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all">← NUOVO AUDIT</button>
-        <div className="text-[10px] font-black text-[#1087a0] uppercase tracking-widest italic">MASTER REPORT • {result.platformSuggestion || 'GENERAL'}</div>
+        <button onClick={onReset} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all">{t.newAudit}</button>
+        
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={handleTranslateReport} 
+            disabled={translating}
+            className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full transition-all ${translating ? 'bg-white/10 text-gray-500' : 'bg-[#1087a0]/20 text-[#1087a0] hover:bg-[#1087a0] hover:text-white'}`}
+          >
+            {translating ? t.translating : `${t.translateBtn} ${language}`}
+          </button>
+          <div className="text-[10px] font-black text-[#1087a0] uppercase tracking-widest italic hidden md:block">MASTER REPORT • {result.platformSuggestion || 'GENERAL'}</div>
+        </div>
       </div>
 
       <div className="glass p-12 rounded-[50px] flex flex-col md:flex-row items-center gap-12 shadow-2xl relative overflow-hidden border border-white/5">
@@ -74,7 +96,6 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
         </div>
       </div>
 
-      {/* SENIOR INSIGHT - Full Width for depth */}
       <div className="glass p-12 rounded-[40px] border-l-8 border-[#a02a11]">
         <h3 className="text-[12px] font-black uppercase text-[#a02a11] mb-8 tracking-[0.4em]">SENIOR STRATEGIC INSIGHT</h3>
         <p className="text-gray-200 italic text-xl leading-[1.8] font-medium whitespace-pre-wrap">
@@ -83,7 +104,6 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* CONTENT STRUCTURE - Detailed technical view */}
         <div className="glass p-10 rounded-[40px] border-t-4 border-[#ffe399] flex flex-col">
           <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-8 tracking-widest">CONTENT STRUCTURE & VISUALS</h3>
           <div className="flex-1 overflow-y-auto custom-scrollbar pr-4">
@@ -93,7 +113,6 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
           </div>
         </div>
 
-        {/* STRATEGIC COPY - The Script */}
         <div className="glass p-10 rounded-[40px] border-t-4 border-[#1087a0] flex flex-col">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-[10px] font-black uppercase text-[#1087a0] tracking-widest">STRATEGIC COPYWRITING</h3>
@@ -101,7 +120,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
               onClick={() => { navigator.clipboard.writeText(result.caption || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
               className={`text-[9px] font-black uppercase px-6 py-2 rounded-full transition-all ${copied ? 'bg-green-500 text-white' : 'bg-white text-black hover:bg-[#a02a11] hover:text-white'}`}
             >
-              {copied ? 'COPIATO' : 'COPIA TESTO'}
+              {copied ? t.copied : t.copyBtn}
             </button>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar pr-4">
@@ -121,13 +140,12 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
         <div className="glass p-20 rounded-[60px] text-center space-y-8 border border-white/5 shadow-inner bg-gradient-to-b from-white/[0.02] to-transparent">
           <div className="text-7xl animate-pulse">🎬</div>
           <h3 className="text-5xl font-black uppercase tracking-tighter italic">STORYBOARD GENERATOR</h3>
-          <p className="text-gray-500 text-[10px] uppercase tracking-[0.4em]">Audit Cinematografico • Storyboard Tecnico Dettagliato</p>
           <button 
             onClick={loadScript} 
             disabled={loadingScript} 
             className="bg-[#a02a11] text-white px-16 py-6 rounded-2xl font-black uppercase text-sm tracking-widest hover:scale-105 transition-all shadow-[0_0_40px_rgba(160,42,17,0.5)] disabled:opacity-50"
           >
-            {loadingScript ? "PRODUZIONE IN CORSO..." : "SBLOCCA STORYBOARD TECNICO"}
+            {loadingScript ? t.loadingStoryboard : t.unlockStoryboard}
           </button>
         </div>
       ) : (
@@ -139,7 +157,6 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
           {script.map((s, i) => (
             <div key={i} className="glass p-12 md:p-16 rounded-[60px] border border-white/5 hover:border-[#a02a11]/30 transition-all group relative overflow-hidden bg-gradient-to-br from-white/[0.01] to-transparent">
               <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-[12rem] font-black italic select-none pointer-events-none">0{s.scene}</div>
-              
               <div className="flex items-center gap-6 mb-16 relative z-10">
                 <div className="bg-[#a02a11] text-white px-10 py-4 rounded-2xl font-black text-2xl shadow-2xl tracking-tighter">SCENA {s.scene}</div>
                 <div className="h-px flex-1 bg-gradient-to-r from-[#a02a11] to-transparent opacity-30"></div>
@@ -177,7 +194,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
             </div>
           ))}
           <div className="flex justify-center pt-12">
-             <button onClick={() => setScript(null)} className="bg-white/5 text-gray-500 px-12 py-5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] hover:text-white transition-all border border-white/5 hover:border-white/20">Chiudi Storyboard Tecnico</button>
+             <button onClick={() => setScript(null)} className="bg-white/5 text-gray-500 px-12 py-5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] hover:text-white transition-all border border-white/5 hover:border-white/20">{t.closeStoryboard}</button>
           </div>
         </div>
       )}
