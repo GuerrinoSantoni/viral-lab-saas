@@ -19,7 +19,6 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
   const [copied, setCopied] = useState(false);
   const t = (TRANSLATIONS[language] || TRANSLATIONS.IT);
 
-  // Monitora se la lingua dell'interfaccia è diversa da quella del report
   const needsTranslation = result.lang !== language;
 
   const loadScript = async () => {
@@ -37,11 +36,8 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
   const handleTranslateAll = async () => {
     setTranslating(true);
     try {
-      // Traduci Analisi
       const translatedResult = await translateAnalysis(result, language);
       setResult(translatedResult);
-
-      // Traduci Scene se presenti
       if (script) {
         const translatedScenes = await translateScenes(script, language);
         setScript(translatedScenes);
@@ -67,7 +63,6 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
     <div className="w-full space-y-12 animate-fadeIn pb-24">
       <div className="flex justify-between items-center glass p-5 rounded-3xl">
         <button onClick={onReset} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all">{t.newAudit}</button>
-        
         <div className="flex items-center gap-4">
           {needsTranslation && (
             <button 
@@ -104,23 +99,23 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
       </div>
 
       <div className="glass p-12 rounded-[40px] border-l-8 border-[#a02a11]">
-        <h3 className="text-[12px] font-black uppercase text-[#a02a11] mb-8 tracking-[0.4em]">SENIOR STRATEGIC INSIGHT</h3>
+        <h3 className="text-[12px] font-black uppercase text-[#a02a11] mb-8 tracking-[0.4em]">SENIOR EXECUTIVE ANALYSIS</h3>
         <p className="text-gray-200 italic text-xl leading-[1.8] font-medium whitespace-pre-wrap">
           {result.analysis}
         </p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass p-10 rounded-[40px] border-t-4 border-[#ffe399] flex flex-col">
+        <div className="glass p-10 rounded-[40px] border-t-4 border-[#ffe399] flex flex-col min-h-[500px]">
           <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-8 tracking-widest">{t.contentStructure}</h3>
           <div className="flex-1 overflow-y-auto custom-scrollbar pr-4">
-            <p className="text-gray-100 text-[15px] leading-[1.9] font-bold uppercase tracking-tight opacity-90 whitespace-pre-wrap">
+            <p className="text-gray-100 text-[16px] leading-[2] font-bold uppercase tracking-tight opacity-90 whitespace-pre-wrap">
               {result.visualData}
             </p>
           </div>
         </div>
 
-        <div className="glass p-10 rounded-[40px] border-t-4 border-[#1087a0] flex flex-col">
+        <div className="glass p-10 rounded-[40px] border-t-4 border-[#1087a0] flex flex-col min-h-[500px]">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-[10px] font-black uppercase text-[#1087a0] tracking-widest">{t.copywritingTitle}</h3>
             <button 
@@ -131,7 +126,7 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
             </button>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar pr-4">
-            <p className="text-gray-200 text-lg leading-[1.8] whitespace-pre-wrap italic font-serif">
+            <p className="text-gray-200 text-lg leading-[1.9] whitespace-pre-wrap italic font-serif">
               {result.caption}
             </p>
             <div className="mt-12 pt-8 border-t border-white/5 flex flex-wrap gap-3">
@@ -147,6 +142,7 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
         <div className="glass p-20 rounded-[60px] text-center space-y-8 border border-white/5 shadow-inner bg-gradient-to-b from-white/[0.02] to-transparent">
           <div className="text-7xl animate-pulse">🎬</div>
           <h3 className="text-5xl font-black uppercase tracking-tighter italic">{t.techStoryboard}</h3>
+          <p className="text-gray-400 text-sm max-w-md mx-auto uppercase font-bold tracking-widest leading-loose">Sblocca il piano di produzione cinematografico completo con indicazioni per camera, luci e audio SFX.</p>
           <button 
             onClick={loadScript} 
             disabled={loadingScript} 
@@ -163,7 +159,7 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
           </div>
           {script.map((s, i) => (
             <div key={i} className="glass p-12 md:p-16 rounded-[60px] border border-white/5 hover:border-[#a02a11]/30 transition-all group relative overflow-hidden bg-gradient-to-br from-white/[0.01] to-transparent">
-              <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-[12rem] font-black italic select-none pointer-events-none">0{s.scene}</div>
+              <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-[15rem] font-black italic select-none pointer-events-none">0{s.scene}</div>
               <div className="flex items-center gap-6 mb-16 relative z-10">
                 <div className="bg-[#a02a11] text-white px-10 py-4 rounded-2xl font-black text-2xl shadow-2xl tracking-tighter">{t.scene} {s.scene}</div>
                 <div className="h-px flex-1 bg-gradient-to-r from-[#a02a11] to-transparent opacity-30"></div>
@@ -179,8 +175,8 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
                     <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-xl">📽️</div>
                     <span className="text-[12px] font-black text-[#ffe399] uppercase tracking-[0.3em]">{t.visionaryTitle}</span>
                   </div>
-                  <div className="bg-black/20 p-10 rounded-[40px] border border-white/5">
-                    <p className="text-gray-100 text-[17px] leading-[1.8] font-medium whitespace-pre-wrap">
+                  <div className="bg-black/40 p-10 rounded-[40px] border border-white/10 shadow-inner">
+                    <p className="text-gray-100 text-[17px] leading-[2.1] font-medium whitespace-pre-wrap first-letter:text-5xl first-letter:font-black first-letter:text-[#a02a11] first-letter:mr-3 first-letter:float-left">
                       {s.description}
                     </p>
                   </div>
@@ -191,8 +187,8 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
                     <div className="w-10 h-10 rounded-full bg-[#1087a0]/10 flex items-center justify-center text-xl">🔊</div>
                     <span className="text-[12px] font-black text-[#1087a0] uppercase tracking-[0.3em]">{t.audioStrategy}</span>
                   </div>
-                  <div className="bg-[#1087a0]/5 p-10 rounded-[40px] border border-[#1087a0]/10 h-full">
-                    <p className="text-gray-300 text-[15px] leading-[1.8] font-medium italic border-l-4 border-[#1087a0] pl-8">
+                  <div className="bg-[#1087a0]/5 p-10 rounded-[40px] border border-[#1087a0]/10 h-full shadow-inner">
+                    <p className="text-gray-300 text-[15px] leading-[2] font-medium italic border-l-4 border-[#1087a0] pl-8">
                       {s.audioSFX}
                     </p>
                   </div>
