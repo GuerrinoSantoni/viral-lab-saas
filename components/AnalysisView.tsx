@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnalysisResult, Language, Scene } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { generateSceneAnalysis, translateAnalysis } from '../services/geminiService';
+import { generateSceneAnalysis, translateAnalysis, translateScenes } from '../services/geminiService';
 
 interface Props {
   result: AnalysisResult;
@@ -19,8 +19,8 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
   const [copied, setCopied] = useState(false);
   const t = (TRANSLATIONS[language] || TRANSLATIONS.IT);
 
-  const hashtags = Array.isArray(result?.hashtags) ? result.hashtags : [];
-  const displayScore = result?.score || "N/A";
+  // Monitora se la lingua dell'interfaccia è diversa da quella del report
+  const needsTranslation = result.lang !== language;
 
   const loadScript = async () => {
     setLoadingScript(true);
@@ -34,12 +34,18 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
     }
   };
 
-  const handleTranslateReport = async () => {
+  const handleTranslateAll = async () => {
     setTranslating(true);
     try {
-      const translated = await translateAnalysis(result, language);
-      setResult(translated);
-      setScript(null);
+      // Traduci Analisi
+      const translatedResult = await translateAnalysis(result, language);
+      setResult(translatedResult);
+
+      // Traduci Scene se presenti
+      if (script) {
+        const translatedScenes = await translateScenes(script, language);
+        setScript(translatedScenes);
+      }
     } catch (e) {
       alert(t.genError);
     } finally {
@@ -63,13 +69,15 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
         <button onClick={onReset} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all">{t.newAudit}</button>
         
         <div className="flex items-center gap-4">
-          <button 
-            onClick={handleTranslateReport} 
-            disabled={translating}
-            className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full transition-all ${translating ? 'bg-white/10 text-gray-500' : 'bg-[#1087a0]/20 text-[#1087a0] hover:bg-[#1087a0] hover:text-white'}`}
-          >
-            {translating ? t.translating : `${t.translateBtn} ${language}`}
-          </button>
+          {needsTranslation && (
+            <button 
+              onClick={handleTranslateAll} 
+              disabled={translating}
+              className={`text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full transition-all animate-pulse shadow-[0_0_15px_rgba(16,135,160,0.5)] ${translating ? 'bg-white/10 text-gray-500' : 'bg-[#1087a0] text-white hover:bg-[#0d6e82]'}`}
+            >
+              {translating ? t.translating : `${t.translateBtn} ${language}`}
+            </button>
+          )}
         </div>
       </div>
 
@@ -77,7 +85,7 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
         <div className="w-48 h-48 bg-gradient-to-br from-[#a02a11] to-[#1087a0] rounded-full flex flex-col items-center justify-center border-4 border-white/10 shadow-[0_0_50px_rgba(160,42,17,0.3)] shrink-0">
           <span className="text-[10px] font-black text-white/50 uppercase tracking-tighter mb-1">{t.viralScore}</span>
           <span className="text-5xl font-black text-white leading-none tracking-tighter">
-            {displayScore.includes('/100') ? displayScore : `${displayScore}/100`}
+            {result.score.includes('/100') ? result.score : `${result.score}/100`}
           </span>
         </div>
         <div className="flex-1 text-center md:text-left space-y-4">
@@ -127,7 +135,7 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
               {result.caption}
             </p>
             <div className="mt-12 pt-8 border-t border-white/5 flex flex-wrap gap-3">
-              {hashtags.map((tag, i) => (
+              {Array.isArray(result.hashtags) && result.hashtags.map((tag, i) => (
                 <span key={i} className="text-[#1087a0] text-[11px] font-black uppercase tracking-tighter bg-[#1087a0]/5 px-3 py-1 rounded-md">#{tag.replace('#', '')}</span>
               ))}
             </div>
@@ -172,7 +180,7 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
                     <span className="text-[12px] font-black text-[#ffe399] uppercase tracking-[0.3em]">{t.visionaryTitle}</span>
                   </div>
                   <div className="bg-black/20 p-10 rounded-[40px] border border-white/5">
-                    <p className="text-gray-100 text-[17px] leading-[1.8] font-medium whitespace-pre-wrap first-letter:text-4xl first-letter:font-black first-letter:text-[#a02a11] first-letter:mr-1">
+                    <p className="text-gray-100 text-[17px] leading-[1.8] font-medium whitespace-pre-wrap">
                       {s.description}
                     </p>
                   </div>
