@@ -14,10 +14,10 @@ const ANALYSIS_SCHEMA = {
   properties: {
     score: { type: Type.STRING, description: "Punteggio virale (es. 85/100)" },
     title: { type: Type.STRING, description: "Titolo accattivante" },
-    analysis: { type: Type.STRING, description: "Critica costruttiva senior" },
-    caption: { type: Type.STRING, description: "Testo del post" },
+    analysis: { type: Type.STRING, description: "Critica costruttiva senior dettagliata (min 150 parole)" },
+    caption: { type: Type.STRING, description: "Testo del post strategico e profondo (min 150 parole)" },
     hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
-    visualData: { type: Type.STRING, description: "Descrizione visiva per storyboard" },
+    visualData: { type: Type.STRING, description: "Descrizione della struttura visiva e ritmica (min 150 parole)" },
     platformSuggestion: { type: Type.STRING, description: "Consiglio specifico piattaforma" },
     ideaDuration: { type: Type.STRING, description: "Durata stimata (es. 45s)" },
   },
@@ -56,7 +56,14 @@ export async function analyzeVideo(
     contents: {
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `AGISCI COME UN PRODUTTORE YOUTUBE CON 20 ANNI DI ESPERIENZA. Analizza questo video per ${platform} in lingua ${lang}. Sii brutale, tecnico e strategico.` }
+        { text: `AGISCI COME UN PRODUTTORE YOUTUBE CON 20 ANNI DI ESPERIENZA. Analizza questo video per ${platform} in lingua ${lang}. 
+        
+        REGOLE DI SCRITTURA MANDATORIE:
+        1. SENIOR INSIGHT (Campo 'analysis'): Almeno 150 parole. Analizza ritmo, ritenzione, psicologia dello spettatore e difetti tecnici.
+        2. CONTENT STRUCTURE (Campo 'visualData'): Almeno 150 parole. Descrivi minuziosamente la sequenza visiva, i tagli necessari, la color correction e l'uso dei B-roll.
+        3. STRATEGIC COPY (Campo 'caption'): Almeno 150 parole. Scrivi un testo che non sia solo una descrizione, ma un pezzo di copywriting ipnotico basato su framework come AIDA o PAS.
+        
+        Sii brutale, estremamente tecnico e prolisso nei dettagli strategici.` }
       ]
     },
     config: { 
@@ -86,7 +93,12 @@ export async function generateIdea(
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
 
-  parts.push({ text: `PRODUTTORE SENIOR: Crea una strategia virale per ${platform} in lingua ${lang} basata su: "${prompt}". Esplora angoli creativi mai visti.` });
+  parts.push({ text: `PRODUTTORE SENIOR: Crea una strategia virale per ${platform} in lingua ${lang} basata su: "${prompt}".
+  
+  REGOLE DI SCRITTURA MANDATORIE:
+  - Ogni sezione testuale (analysis, visualData, caption) DEVE superare le 150 parole.
+  - Sviscera ogni aspetto della strategia: angoli psicologici, ganci (hooks), transizioni visive e call to action complesse.
+  - Usa terminologia tecnica da industria cinematografica e marketing avanzato.` });
 
   const response = await ai.models.generateContent({
     model: MAIN_MODEL,
@@ -107,11 +119,11 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
         Crea uno storyboard tecnico cinematografico di 6 scene basato su questo input: "${visualData}".
         
         REGOLE MANDATORIE PER OGNI SCENA:
-        1. DESCRIZIONE VISIVA (Minimo 100 parole): Devi descrivere l'inquadratura (es. Close-up 85mm, Wide Shot 24mm), il movimento di camera (Pan, Tilt, Tracking Shot), l'illuminazione (Key light, Rim light), il color grading suggerito e l'azione specifica del soggetto.
-        2. AUDIO STRATEGY (Estremamente dettagliato): Descrivi il sound design stratificato (Foley di passi, rumori ambientali, effetti glitch), il tipo di musica e il tono esatto della voce (es. sussurrato, autoritario, ritmato).
+        1. DESCRIZIONE VISIVA: Minimo 120 parole di puro dettaglio tecnico (lenti, luci, movimenti, espressioni).
+        2. AUDIO STRATEGY: Minimo 80 parole di sound design stratificato.
         3. Lingua: ${lang}.
         
-        Sii professionale, visivo e tecnico. Non risparmiare parole.`,
+        Sii prolisso e professionale.`,
     config: { 
       responseMimeType: "application/json",
       responseSchema: {
@@ -120,8 +132,8 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
           type: Type.OBJECT,
           properties: {
             scene: { type: Type.NUMBER },
-            description: { type: Type.STRING, description: "Descrizione visiva tecnica di almeno 100 parole" },
-            audioSFX: { type: Type.STRING, description: "Strategia audio e sound design dettagliata" },
+            description: { type: Type.STRING },
+            audioSFX: { type: Type.STRING },
             duration: { type: Type.STRING },
           },
           required: ["scene", "description", "audioSFX", "duration"]
