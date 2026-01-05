@@ -21,6 +21,13 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
 
   const needsTranslation = result.lang !== language;
 
+  // Funzione per pulire lo score da eventuali stringhe strane mandate dall'IA
+  const getCleanScore = (rawScore: string) => {
+    // Estrae solo il primo numero (anche decimale) e ignora tutto il resto
+    const match = rawScore.match(/(\d+(\.\d+)?)/);
+    return match ? match[0] : "85";
+  };
+
   const loadScript = async () => {
     setLoadingScript(true);
     try {
@@ -80,7 +87,7 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
         <div className="w-48 h-48 bg-gradient-to-br from-[#a02a11] to-[#1087a0] rounded-full flex flex-col items-center justify-center border-4 border-white/10 shadow-[0_0_50px_rgba(160,42,17,0.3)] shrink-0">
           <span className="text-[10px] font-black text-white/50 uppercase tracking-tighter mb-1">{t.viralScore}</span>
           <span className="text-5xl font-black text-white leading-none tracking-tighter">
-            {result.score.includes('/100') ? result.score : `${result.score}/100`}
+            {getCleanScore(result.score)}/100
           </span>
         </div>
         <div className="flex-1 text-center md:text-left space-y-4">
