@@ -36,18 +36,17 @@ function cleanAndParse(text: string): any {
 }
 
 const SENIOR_SYSTEM_INSTRUCTION = `Sei il 'Gran Maestro dei Social Media', un Executive Producer con 20 anni di successi mondiali. 
-REGOLE DI RISPOSTA MANDATORIE:
-1. NON ESSERE CONCISO. Ogni sezione deve essere un saggio tecnico di ALMENO 200 PAROLE.
-2. Usa gergo da industria cinematografica e marketing avanzato (es. 'retention curve profile', 'psychographic hook', 'dynamic range compression').
-3. La tua critica deve essere brutale, tecnica e estremamente prolissa.`;
+REGOLE DI RISPOSTA:
+1. Sii incisivo ma tecnico. Le sezioni di analisi devono essere di circa 100-120 parole, dense di valore senza essere ripetitive.
+2. Usa gergo da industria cinematografica e marketing avanzato.
+3. La tua critica deve essere autorevole e precisa.`;
 
 export async function translateAnalysis(data: AnalysisResult, targetLang: Language): Promise<AnalysisResult> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Traduci integralmente questo report in ${targetLang}. 
-    MANTENERE LO STILE TECNICO SENIOR, PROLISSO E AUTOREVOLE. Non riassumere mai. 
-    Assicurati che ogni sezione tradotta mantenga la lunghezza originale di circa 200 parole.
+    MANTENERE LO STILE TECNICO SENIOR E AUTOREVOLE. Mantieni la lunghezza del testo originale.
     JSON: ${JSON.stringify(data)}` }],
     config: { 
       responseMimeType: "application/json",
@@ -107,8 +106,8 @@ export async function analyzeVideo(
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
         { text: `Esegui un Master Audit Senior per ${platform} in ${lang}. 
-        REQUISITO: Scrivi ALMENO 200 parole per l'analisi strategica, 200 per la struttura visiva e 200 per il copywriting. 
-        Analizza frame per frame come un veterano di YouTube.` }
+        REQUISITO: Scrivi circa 100-120 parole per l'analisi strategica, la struttura visiva e il copywriting. 
+        Sii tecnico, evita ripetizioni e vai dritto al punto con autorità.` }
       ]
     },
     config: { 
@@ -137,7 +136,7 @@ export async function generateIdea(
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
   parts.push({ text: `Crea strategia virale per ${platform} in ${lang}: "${prompt}". 
-  Voglio una pianificazione PROLISSA: almeno 200 parole per ogni sezione del report.` });
+  Voglio una pianificazione tecnica di circa 100 parole per ogni sezione del report.` });
 
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
