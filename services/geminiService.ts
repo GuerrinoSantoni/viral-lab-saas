@@ -35,17 +35,19 @@ function cleanAndParse(text: string): any {
   }
 }
 
-const SENIOR_SYSTEM_INSTRUCTION = `Sei il 'Gran Maestro dei Social Media', un Producer con 20 anni di successi. 
-REGOLE DI RISPOSTA:
-1. NON ESSERE CONCISO. Almeno 150-200 parole per sezione.
-2. Usa linguaggio tecnico senior.`;
+const SENIOR_SYSTEM_INSTRUCTION = `Sei il 'Gran Maestro dei Social Media', un Executive Producer con 20 anni di successi mondiali. 
+REGOLE DI RISPOSTA MANDATORIE:
+1. NON ESSERE CONCISO. Ogni sezione deve essere un saggio tecnico di ALMENO 200 PAROLE.
+2. Usa gergo da industria cinematografica e marketing avanzato (es. 'retention curve profile', 'psychographic hook', 'dynamic range compression').
+3. La tua critica deve essere brutale, tecnica e estremamente prolissa.`;
 
 export async function translateAnalysis(data: AnalysisResult, targetLang: Language): Promise<AnalysisResult> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Traduci integralmente questo report in ${targetLang}. 
-    MANTENERE LO STILE TECNICO SENIOR. Non riassumere.
+    MANTENERE LO STILE TECNICO SENIOR, PROLISSO E AUTOREVOLE. Non riassumere mai. 
+    Assicurati che ogni sezione tradotta mantenga la lunghezza originale di circa 200 parole.
     JSON: ${JSON.stringify(data)}` }],
     config: { 
       responseMimeType: "application/json",
@@ -61,6 +63,7 @@ export async function translateScenes(scenes: Scene[], targetLang: Language): Pr
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Traduci queste scene di storyboard in ${targetLang}. 
+    MANTENI IL LIVELLO DI DETTAGLIO ESTREMO (100+ parole per scena). 
     Mantieni i dettagli tecnici per regia e audio.
     JSON: ${JSON.stringify(scenes)}` }],
     config: { 
@@ -90,7 +93,7 @@ export async function analyzeVideo(
   onProgress?: (step: string) => void
 ): Promise<AnalysisResult> {
   const ai = getAI();
-  onProgress?.("Audit Senior in corso...");
+  onProgress?.("Inizializzazione Scan Senior...");
   
   const base64 = await new Promise<string>((resolve) => {
     const reader = new FileReader();
@@ -103,7 +106,9 @@ export async function analyzeVideo(
     contents: {
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `Esegui Master Audit per ${platform} in ${lang}.` }
+        { text: `Esegui un Master Audit Senior per ${platform} in ${lang}. 
+        REQUISITO: Scrivi ALMENO 200 parole per l'analisi strategica, 200 per la struttura visiva e 200 per il copywriting. 
+        Analizza frame per frame come un veterano di YouTube.` }
       ]
     },
     config: { 
@@ -131,7 +136,8 @@ export async function generateIdea(
     });
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
-  parts.push({ text: `Crea strategia virale per ${platform} in ${lang}: "${prompt}".` });
+  parts.push({ text: `Crea strategia virale per ${platform} in ${lang}: "${prompt}". 
+  Voglio una pianificazione PROLISSA: almeno 200 parole per ogni sezione del report.` });
 
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
@@ -149,7 +155,12 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Crea storyboard tecnico 5-10 scene in ${lang} per: "${visualData}".` }],
+    contents: [{ text: `Agisci come un Regista e Sound Designer Senior. 
+    Crea uno storyboard tecnico di 5-10 scene in ${lang} basato su: "${visualData}". 
+    REGOLE PER OGNI SCENA:
+    - DESCRIZIONE VISIVA: Minimo 120 parole di dettagli tecnici su lenti, movimenti camera, luci e recitazione.
+    - AUDIO/SFX: Minimo 80 parole sulla strategia sonora, livelli decibel, sound layers e musica. 
+    Sii estremamente tecnico e prolisso.` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: {
