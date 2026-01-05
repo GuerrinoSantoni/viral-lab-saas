@@ -2,7 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, AnalysisResult, Language, Scene } from "../types";
 
+// Modello pro per task complessi e analisi video multimodale più stabile
 const PRIMARY_MODEL = 'gemini-3-flash-preview'; 
+const PRO_MODEL = 'gemini-3-pro-preview';
 
 const getAI = () => {
   if (!process.env.API_KEY) throw new Error("API_KEY_MANCANTE");
@@ -95,31 +97,39 @@ export async function analyzeVideo(
   const ai = getAI();
   onProgress?.("Inizializzazione Scan Senior...");
   
-  const base64 = await new Promise<string>((resolve) => {
+  const base64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve((reader.result as string).split(',')[1]);
+    reader.onerror = (error) => reject(error);
   });
 
+  // Usiamo il modello Pro per l'analisi video perché è più robusto con file multimodali pesanti
+  // e meno propenso a errori 500 "Internal Error" durante il parsing di video + JSON schema.
   const response = await ai.models.generateContent({
-    model: PRIMARY_MODEL,
-    contents: {
+    model: PRO_MODEL,
+    contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
         { text: `Esegui un Master Audit Senior per ${platform} in ${lang}. 
         REQUISITI MANDATORI: 
         - Score: un numero da 0 a 100.
-        - Analisi Strategica: 100 parole.
+        - Analisi Strategica: circa 100 parole.
         - Copywriting (caption): ALMENO 60 parole ad alta conversione.
-        Sii tecnico e brutale.` }
+        Sii tecnico e brutale nell'audit video.` }
       ]
-    },
+    }],
     config: { 
       systemInstruction: SENIOR_SYSTEM_INSTRUCTION,
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA,
     }
   });
+  
+  if (!response.text) {
+    throw new Error("L'API non ha restituito testo. Riprova con un video più breve.");
+  }
+
   return { ...cleanAndParse(response.text), lang };
 }
 
