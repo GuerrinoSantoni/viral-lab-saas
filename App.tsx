@@ -36,7 +36,7 @@ export default function App() {
   const [isMaster, setIsMaster] = useState(() => localStorage.getItem('sg_master') === 'true');
   const [clickCount, setClickCount] = useState(0);
 
-  const t = TRANSLATIONS[lang];
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.IT;
 
   useEffect(() => { localStorage.setItem('sg_credits', credits.toString()); }, [credits]);
   useEffect(() => { localStorage.setItem('sg_master', isMaster.toString()); }, [isMaster]);
@@ -90,20 +90,19 @@ export default function App() {
     if (!platform) return alert("Seleziona una piattaforma.");
     if (!checkAccess()) return;
     
-    // Check file size
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
       return alert(`Il video è troppo pesante. Massimo ${MAX_FILE_SIZE_MB}MB.`);
     }
 
     setLoading(true);
-    setStatus(t.encoding);
+    setStatus(t.encoding || "Caricamento...");
     try {
       const res = await analyzeVideo(file, platform, lang, (step) => setStatus(step));
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
       console.error(e);
-      alert("⚠️ ANALISI INTERROTTA: " + e.message);
+      alert(e.message || "Errore sconosciuto durante l'audit.");
     } finally {
       setLoading(false);
     }
@@ -115,14 +114,14 @@ export default function App() {
     if (!ideaText.trim() && !ideaFile) return alert("Scrivi un'idea o carica un'immagine!");
     
     setLoading(true);
-    setStatus(t.processing);
+    setStatus(t.processing || "Generazione...");
     try {
       const res = await generateIdea(ideaText, platform, lang, ideaFile || undefined);
       setResult(res);
       if (!isMaster) setCredits(prev => Math.max(0, prev - 1));
     } catch (e: any) {
       console.error(e);
-      alert("⚠️ ERRORE GENERAZIONE: " + e.message);
+      alert(e.message || "Errore nella generazione dell'idea.");
     } finally {
       setLoading(false);
     }
