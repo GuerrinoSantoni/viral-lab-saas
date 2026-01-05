@@ -39,7 +39,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
       <div className="glass p-12 rounded-[40px] text-center space-y-4 max-w-md">
         <div className="text-6xl mb-4">⚠️</div>
         <p className="text-[#a02a11] font-black uppercase tracking-widest">ERRORE GENERAZIONE AI</p>
-        <p className="text-gray-500 text-[10px] uppercase">Il modello non ha restituito dati validi. Riprova.</p>
+        <p className="text-gray-500 text-[10px] uppercase">Dati non validi. Riprova.</p>
         <button onClick={onReset} className="w-full mt-4 bg-white text-black px-8 py-3 rounded-xl font-bold uppercase text-[10px] hover:bg-[#a02a11] hover:text-white transition-all">Torna Indietro</button>
       </div>
     );
@@ -74,40 +74,43 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-1 gap-8">
-        <div className="glass p-10 rounded-[40px] border-l-8 border-[#a02a11]">
-          <h3 className="text-[12px] font-black uppercase text-[#a02a11] mb-6 tracking-[0.4em]">SENIOR INSIGHT</h3>
-          <p className="text-gray-200 italic text-xl leading-relaxed font-medium whitespace-pre-wrap">
-            {result.analysis || "Analisi non disponibile."}
-          </p>
-        </div>
+      {/* SENIOR INSIGHT - Full Width for depth */}
+      <div className="glass p-12 rounded-[40px] border-l-8 border-[#a02a11]">
+        <h3 className="text-[12px] font-black uppercase text-[#a02a11] mb-8 tracking-[0.4em]">SENIOR STRATEGIC INSIGHT</h3>
+        <p className="text-gray-200 italic text-xl leading-[1.8] font-medium whitespace-pre-wrap">
+          {result.analysis}
+        </p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass p-8 rounded-[40px] border-t-4 border-[#ffe399]">
-          <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-6 tracking-widest">CONTENT STRUCTURE</h3>
-          <p className="text-gray-300 text-sm leading-relaxed font-bold uppercase tracking-tight opacity-90">
-            {result.visualData || "Struttura visiva non generata."}
-          </p>
+        {/* CONTENT STRUCTURE - Detailed technical view */}
+        <div className="glass p-10 rounded-[40px] border-t-4 border-[#ffe399] flex flex-col">
+          <h3 className="text-[10px] font-black uppercase text-[#ffe399] mb-8 tracking-widest">CONTENT STRUCTURE & VISUALS</h3>
+          <div className="flex-1 overflow-y-auto custom-scrollbar pr-4">
+            <p className="text-gray-100 text-[15px] leading-[1.9] font-bold uppercase tracking-tight opacity-90 whitespace-pre-wrap">
+              {result.visualData}
+            </p>
+          </div>
         </div>
 
-        <div className="glass p-8 rounded-[40px] border-t-4 border-[#1087a0]">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-[10px] font-black uppercase text-[#1087a0] tracking-widest">STRATEGIC COPY</h3>
+        {/* STRATEGIC COPY - The Script */}
+        <div className="glass p-10 rounded-[40px] border-t-4 border-[#1087a0] flex flex-col">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-[10px] font-black uppercase text-[#1087a0] tracking-widest">STRATEGIC COPYWRITING</h3>
             <button 
               onClick={() => { navigator.clipboard.writeText(result.caption || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-              className={`text-[8px] font-black uppercase px-4 py-2 rounded-full transition-all ${copied ? 'bg-green-500 text-white' : 'bg-white text-black hover:bg-[#a02a11] hover:text-white'}`}
+              className={`text-[9px] font-black uppercase px-6 py-2 rounded-full transition-all ${copied ? 'bg-green-500 text-white' : 'bg-white text-black hover:bg-[#a02a11] hover:text-white'}`}
             >
-              {copied ? 'COPIATO' : 'COPIA'}
+              {copied ? 'COPIATO' : 'COPIA TESTO'}
             </button>
           </div>
-          <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-            <p className="text-gray-300 text-xs leading-relaxed whitespace-pre-wrap italic">
-              {result.caption || "Caption non generata."}
+          <div className="flex-1 overflow-y-auto custom-scrollbar pr-4">
+            <p className="text-gray-200 text-lg leading-[1.8] whitespace-pre-wrap italic font-serif">
+              {result.caption}
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-12 pt-8 border-t border-white/5 flex flex-wrap gap-3">
               {hashtags.map((tag, i) => (
-                <span key={i} className="text-[#1087a0] text-[10px] font-black uppercase tracking-tighter">#{tag.replace('#', '')}</span>
+                <span key={i} className="text-[#1087a0] text-[11px] font-black uppercase tracking-tighter bg-[#1087a0]/5 px-3 py-1 rounded-md">#{tag.replace('#', '')}</span>
               ))}
             </div>
           </div>
@@ -124,7 +127,7 @@ export const AnalysisView: React.FC<Props> = ({ result, videoFile, language, onR
             disabled={loadingScript} 
             className="bg-[#a02a11] text-white px-16 py-6 rounded-2xl font-black uppercase text-sm tracking-widest hover:scale-105 transition-all shadow-[0_0_40px_rgba(160,42,17,0.5)] disabled:opacity-50"
           >
-            {loadingScript ? "ELABORAZIONE FRAME BY FRAME..." : "SBLOCCA STORYBOARD TECNICO"}
+            {loadingScript ? "PRODUZIONE IN CORSO..." : "SBLOCCA STORYBOARD TECNICO"}
           </button>
         </div>
       ) : (
