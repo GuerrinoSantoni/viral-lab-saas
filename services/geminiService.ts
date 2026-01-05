@@ -77,7 +77,7 @@ export async function analyzeVideo(
         systemInstruction: SENIOR_SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: ANALYSIS_SCHEMA,
-        temperature: 0.9, // Aumentata per favorire risposte più lunghe ed creative
+        temperature: 0.9,
       }
     });
 
@@ -86,10 +86,7 @@ export async function analyzeVideo(
   } catch (error: any) {
     console.error("Gemini Error:", error);
     if (error.message?.includes('429')) {
-      throw new Error("LIMITE QUOTA RAGGIUNTO: Attendi 60 secondi prima del prossimo audit. Google sta limitando le richieste gratuite.");
-    }
-    if (error.message?.includes('500')) {
-      throw new Error("SERVER OVERLOAD: Il video è troppo complesso o i server sono carichi. Riprova tra poco.");
+      throw new Error("LIMITE QUOTA RAGGIUNTO: Attendi 60 secondi prima del prossimo audit.");
     }
     throw error;
   }
@@ -139,8 +136,12 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
     const response = await ai.models.generateContent({
       model: PRIMARY_MODEL,
       contents: {
-          parts: [{ text: `REGISTA SENIOR: Crea uno storyboard di 6 scene per: "${visualData}". 
-          Scena: minimo 120 parole descrittive. Audio: 80 parole. Lingua: ${lang}.` }]
+          parts: [{ text: `REGISTA SENIOR: Crea uno storyboard tecnico per: "${visualData}". 
+          REGOLE MANDATORIE:
+          1. Genera un numero di scene compreso tra 5 e 10 (decidi tu in base alla complessità).
+          2. Ogni Scena: minimo 120 parole descrittive di dettagli tecnici (lenti, luci, movimenti).
+          3. Audio Strategy: 80 parole di sound design stratificato.
+          4. Lingua: ${lang}.` }]
       },
       config: { 
         responseMimeType: "application/json",
