@@ -13,12 +13,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ language, onLogin, onClose
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const t = TRANSLATIONS[language];
+  const t = TRANSLATIONS[language] || TRANSLATIONS.IT;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
-      // Simulazione Login
       const mockUser: User = {
         id: '123',
         email,
@@ -59,7 +58,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ language, onLogin, onClose
         </form>
 
         <p className="mt-8 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-          {isLogin ? "Non hai un account?" : "Hai già un account?"}
+          {isLogin ? t.noAccount : t.hasAccount}
           <button onClick={() => setIsLogin(!isLogin)} className="ml-2 text-[#a02a11] hover:underline">
             {isLogin ? t.register : t.login}
           </button>
@@ -68,4 +67,3 @@ export const AuthModal: React.FC<AuthModalProps> = ({ language, onLogin, onClose
     </div>
   );
 };
-
