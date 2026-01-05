@@ -36,12 +36,19 @@ function cleanAndParse(text: string): any {
   }
 }
 
-const SENIOR_SYSTEM_INSTRUCTION = `Sei il 'Gran Maestro dei Social Media', un Executive Producer con 20 anni di successi mondiali. 
-REGOLE DI RISPOSTA:
-1. Sii incisivo ma tecnico. Le sezioni di analisi devono essere di circa 100 parole.
-2. Il campo 'caption' deve essere un capolavoro di copywriting di ALMENO 50-80 parole.
-3. Il campo 'score' deve essere ESCLUSIVAMENTE un numero tra 0 e 100.
-4. Usa gergo da industria cinematografica e marketing avanzato.`;
+const SENIOR_SYSTEM_INSTRUCTION = `Sei il 'Gran Maestro dei Social Media', un Executive Producer con 20 anni di successi mondiali e miliardi di views accumulate. 
+
+IL TUO MANIFESTO:
+1. ODIA IL BANALE: Se un'idea sembra "già vista" o "da stock", scartala. Punta sul 'Pattern Interrupt'.
+2. PSICOLOGIA VIRALE: Ogni contenuto deve colpire un trigger emotivo (Rabbia positiva, Stupore, Utilità estrema, FOMO).
+3. ESPANSIONE RADICALE: Se ricevi un input scarno (es. una sola parola), usa la tua esperienza per costruire una strategia complessa e scioccante intorno ad esso. Non limitarti a descrivere l'input, distorcilo per renderlo virale.
+4. METRICHE AL PRIMO POSTO: Progetta per il click (CTR) e per la ritenzione (Watch Time).
+5. STILE SENIOR: Sii incisivo, brutale, tecnico. Le tue analisi devono trasudare autorità.
+
+CAMPI SPECIFICI:
+- 'score': Solo numero 0-100 basato sulla 'Viralità Potenziale'.
+- 'caption': Copywriting ipnotico (80+ parole) con ganci multipli.
+- 'visualData': Istruzioni tecniche di regia per distinguersi dalla massa (luci, angolazioni non comuni, editing sincopato).`;
 
 export async function translateAnalysis(data: AnalysisResult, targetLang: Language): Promise<AnalysisResult> {
   const ai = getAI();
@@ -64,7 +71,7 @@ export async function translateScenes(scenes: Scene[], targetLang: Language): Pr
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Traduci queste scene di storyboard in ${targetLang}. 
-    MANTENI IL LIVELLO DI DETTAGLIO ESTREMO (100+ parole per scena). 
+    MANTENI IL LIVELLO DI DETTAGLIO ESTREMO. 
     JSON: ${JSON.stringify(scenes)}` }],
     config: { 
       responseMimeType: "application/json",
@@ -102,15 +109,14 @@ export async function analyzeVideo(
     reader.onerror = (error) => reject(error);
   });
 
-  // Usiamo il modello Flash: quota alta, zero attese, perfetto per la versione free.
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
         { text: `Esegui un Master Audit Senior per ${platform} in ${lang}. 
-        REQUISITI: Score 0-100, Analisi tecnica di 100 parole, Copywriting di almeno 60 parole. 
-        Analizza con occhio clinico da veterano del settore.` }
+        Sii critico. Se il video è noioso o troppo "standard", dimmelo e proponi una distorsione virale.
+        Analisi tecnica 100 parole, Copywriting ipnotico 80 parole.` }
       ]
     }],
     config: { 
@@ -121,7 +127,7 @@ export async function analyzeVideo(
   });
   
   if (!response.text) {
-    throw new Error("L'IA non ha risposto. Riprova con un video più leggero.");
+    throw new Error("L'IA non ha risposto. Riprova.");
   }
 
   return { ...cleanAndParse(response.text), lang };
@@ -143,8 +149,16 @@ export async function generateIdea(
     });
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
-  parts.push({ text: `Crea strategia virale per ${platform} in ${lang}: "${prompt}". 
-  MANDATORIO: Il campo caption deve essere lungo almeno 60 parole. Lo score deve essere un numero puro tra 0 e 100.` });
+  
+  parts.push({ text: `GENERA UN'IDEA DIROMPENTE (Disruptive) per ${platform} in ${lang} basandoti su: "${prompt || 'Qualcosa di mai visto'}".
+  
+  SFIDA: L'utente potrebbe aver inserito un prompt scarno. Ignora la semplicità e crea un concept ELITARIO, fuori dagli schemi, anti-stock. 
+  Punta a:
+  1. Un titolo che obblighi al click (senza clickbait becero, ma con curiosità reale).
+  2. Una struttura visiva che rompa il feed.
+  3. Una strategia per trasformare le views in iscritti fedeli.
+  
+  MANDATORIO: Campo caption 80+ parole di puro copywriting persuasivo.` });
 
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
@@ -163,11 +177,11 @@ export async function generateSceneAnalysis(visualData: string, lang: Language):
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Agisci come un Regista e Sound Designer Senior. 
-    Crea uno storyboard tecnico di 5-10 scene in ${lang} basato su: "${visualData}". 
+    Crea uno storyboard tecnico di 5-10 scene in ${lang} basato su questa visione dirompente: "${visualData}". 
+    Evita inquadrature banali. Pensa a angolazioni 'POV', 'Low angle', 'Extreme Close Up' e transizioni basate sul movimento.
     REGOLE PER OGNI SCENA:
     - DESCRIZIONE VISIVA: Minimo 120 parole di dettagli tecnici.
-    - AUDIO/SFX: Minimo 80 parole sulla strategia sonora.
-    Sii estremamente tecnico.` }],
+    - AUDIO/SFX: Minimo 80 parole sulla strategia sonora (foley, sound design, sub-bass).` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: {
