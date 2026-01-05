@@ -25,4 +25,5 @@ export interface AnalysisResult {
   visualData: string;
   platformSuggestion: string;
   ideaDuration: string;
+  lang?: Language;
 }
