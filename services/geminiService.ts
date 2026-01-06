@@ -39,16 +39,11 @@ function cleanAndParse(text: string): any {
 const SENIOR_SYSTEM_INSTRUCTION = `Sei il 'Gran Maestro dei Social Media', un Executive Producer con 20 anni di successi mondiali e miliardi di views accumulate. 
 
 IL TUO MANIFESTO:
-1. ODIA IL BANALE: Se un'idea sembra "già vista" o "da stock", scartala. Punta sul 'Pattern Interrupt'.
+1. ODIA IL BANALE: Se un'idea sembra "già vista" o "da stock", scartala. Punta sul 'Pattern Interrupt'. Niente video motivazionali triti e ritriti o consigli generici.
 2. PSICOLOGIA VIRALE: Ogni contenuto deve colpire un trigger emotivo (Rabbia positiva, Stupore, Utilità estrema, FOMO).
 3. ESPANSIONE RADICALE: Se ricevi un input scarno (es. una sola parola), usa la tua esperienza per costruire una strategia complessa e scioccante intorno ad esso. Non limitarti a descrivere l'input, distorcilo per renderlo virale.
 4. METRICHE AL PRIMO POSTO: Progetta per il click (CTR) e per la ritenzione (Watch Time).
-5. STILE SENIOR: Sii incisivo, brutale, tecnico. Le tue analisi devono trasudare autorità.
-
-CAMPI SPECIFICI:
-- 'score': Solo numero 0-100 basato sulla 'Viralità Potenziale'.
-- 'caption': Copywriting ipnotico (80+ parole) con ganci multipli.
-- 'visualData': Istruzioni tecniche di regia per distinguersi dalla massa (luci, angolazioni non comuni, editing sincopato).`;
+5. STILE SENIOR: Sii incisivo, brutale, tecnico. Le tue analisi devono trasudare autorità. Non usare aggettivi banali come "interessante" o "carino".`;
 
 export async function translateAnalysis(data: AnalysisResult, targetLang: Language): Promise<AnalysisResult> {
   const ai = getAI();
@@ -176,21 +171,27 @@ export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Lang
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Agisci come un Regista e Sound Designer Senior. 
-    DEVI creare uno storyboard tecnico che esegua fedelmente la seguente visione.
+    contents: [{ text: `Agisci come un Regista, Sound Designer e Montatore Senior. 
+    DEVI creare uno storyboard tecnico cinematografico che esegua fedelmente la seguente visione:
     
-    TITOLO DEL PROGETTO: "${analysis.title}"
-    CONCETTO E STRATEGIA: "${analysis.analysis}"
-    STRUTTURA VISIVA SUGGERITA: "${analysis.visualData}"
+    TITOLO: "${analysis.title}"
+    CONCETTO: "${analysis.analysis}"
+    VISION: "${analysis.visualData}"
     
-    REGOLE MANDATORIE:
-    1. Ogni scena DEVE essere coerente con il titolo e la strategia sopra descritti. Non inventare concept diversi.
-    2. Evita inquadrature banali. Pensa a angolazioni 'POV', 'Low angle', 'Extreme Close Up' e transizioni basate sul movimento.
-    3. Produci da 5 a 10 scene in lingua ${lang}.
+    REGOLE MANDATORIE PER LO STORYBOARD:
+    1. QUANTITÀ: Devi generare MINIMO 8 e MASSIMO 12 scene. Se ne generi solo 5 verrai considerato un dilettante. Un Senior Master garantisce dinamismo con almeno 10 cambi di inquadratura o scena.
+    2. COERENZA: Ogni scena deve essere l'esecuzione visiva dell'idea "${analysis.title}". Non divagare.
+    3. STRUTTURA: 
+       - Scene 1-2: Hook visivo violento (Pattern Interrupt).
+       - Scene 3-5: Sviluppo e curiosità (Retention).
+       - Scene 6-8: Il cuore dell'idea (Value Bomb).
+       - Scene 9-10+: Chiusura virale e Call to Action distruttiva.
+    4. TECNICA: Usa angolazioni POV, Dutch Angle, Extreme Close Ups, e transizioni basate sul sound design.
     
-    REGOLE PER OGNI SCENA:
-    - DESCRIZIONE VISIVA: Minimo 120 parole di dettagli tecnici che realizzano l'idea di "${analysis.title}".
-    - AUDIO/SFX: Minimo 80 parole sulla strategia sonora (foley, sound design, sub-bass).` }],
+    REGOLE PER OGNI SCENA (Lingua: ${lang}):
+    - DESCRIZIONE VISIVA: Minimo 120 parole di estremo dettaglio su luci, movimenti camera, lenti e azioni.
+    - AUDIO/SFX: Minimo 80 parole su frequenze, foley, musica e impatto psicologico del suono.
+    - DURATA: Indica la durata precisa (es. 0.8s, 2.5s).` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: {
