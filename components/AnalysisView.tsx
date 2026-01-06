@@ -21,9 +21,7 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
 
   const needsTranslation = result.lang !== language;
 
-  // Funzione per pulire lo score da eventuali stringhe strane mandate dall'IA
   const getCleanScore = (rawScore: string) => {
-    // Estrae solo il primo numero (anche decimale) e ignora tutto il resto
     const match = rawScore.match(/(\d+(\.\d+)?)/);
     return match ? match[0] : "85";
   };
@@ -31,7 +29,8 @@ export const AnalysisView: React.FC<Props> = ({ result: initialResult, videoFile
   const loadScript = async () => {
     setLoadingScript(true);
     try {
-      const data = await generateSceneAnalysis(result.visualData, language);
+      // Passiamo l'intero oggetto result per garantire coerenza totale
+      const data = await generateSceneAnalysis(result, language);
       setScript(data);
     } catch (e) { 
       alert(t.errorQuota); 
