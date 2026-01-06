@@ -172,15 +172,24 @@ export async function generateIdea(
   return { ...cleanAndParse(response.text), lang };
 }
 
-export async function generateSceneAnalysis(visualData: string, lang: Language): Promise<Scene[]> {
+export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Language): Promise<Scene[]> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Agisci come un Regista e Sound Designer Senior. 
-    Crea uno storyboard tecnico di 5-10 scene in ${lang} basato su questa visione dirompente: "${visualData}". 
-    Evita inquadrature banali. Pensa a angolazioni 'POV', 'Low angle', 'Extreme Close Up' e transizioni basate sul movimento.
+    DEVI creare uno storyboard tecnico che esegua fedelmente la seguente visione.
+    
+    TITOLO DEL PROGETTO: "${analysis.title}"
+    CONCETTO E STRATEGIA: "${analysis.analysis}"
+    STRUTTURA VISIVA SUGGERITA: "${analysis.visualData}"
+    
+    REGOLE MANDATORIE:
+    1. Ogni scena DEVE essere coerente con il titolo e la strategia sopra descritti. Non inventare concept diversi.
+    2. Evita inquadrature banali. Pensa a angolazioni 'POV', 'Low angle', 'Extreme Close Up' e transizioni basate sul movimento.
+    3. Produci da 5 a 10 scene in lingua ${lang}.
+    
     REGOLE PER OGNI SCENA:
-    - DESCRIZIONE VISIVA: Minimo 120 parole di dettagli tecnici.
+    - DESCRIZIONE VISIVA: Minimo 120 parole di dettagli tecnici che realizzano l'idea di "${analysis.title}".
     - AUDIO/SFX: Minimo 80 parole sulla strategia sonora (foley, sound design, sub-bass).` }],
     config: { 
       responseMimeType: "application/json",
