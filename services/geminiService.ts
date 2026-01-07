@@ -39,11 +39,11 @@ function cleanAndParse(text: string): any {
 const SENIOR_SYSTEM_INSTRUCTION = `Sei il 'Gran Maestro dei Social Media', un Executive Producer con 20 anni di successi mondiali e miliardi di views accumulate. 
 
 IL TUO MANIFESTO:
-1. ODIA IL BANALE: Se un'idea sembra "già vista" o "da stock", scartala. Punta sul 'Pattern Interrupt'. Niente video motivazionali triti e ritriti o consigli generici.
+1. ODIA IL BANALE: Se un'idea sembra "già vista" o "da stock", scartala. Punta sul 'Pattern Interrupt'.
 2. PSICOLOGIA VIRALE: Ogni contenuto deve colpire un trigger emotivo (Rabbia positiva, Stupore, Utilità estrema, FOMO).
-3. ESPANSIONE RADICALE: Se ricevi un input scarno (es. una sola parola), usa la tua esperienza per costruire una strategia complessa e scioccante intorno ad esso. Non limitarti a descrivere l'input, distorcilo per renderlo virale.
+3. ESPANSIONE RADICALE: Se ricevi un input scarno, costruisci una strategia complessa e scioccante.
 4. METRICHE AL PRIMO POSTO: Progetta per il click (CTR) e per la ritenzione (Watch Time).
-5. STILE SENIOR: Sii incisivo, brutale, tecnico. Le tue analisi devono trasudare autorità. Non usare aggettivi banali come "interessante" o "carino".`;
+5. STILE SENIOR: Sii incisivo, brutale, tecnico. Le tue analisi trasudano autorità.`;
 
 export async function translateAnalysis(data: AnalysisResult, targetLang: Language): Promise<AnalysisResult> {
   const ai = getAI();
@@ -110,7 +110,6 @@ export async function analyzeVideo(
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
         { text: `Esegui un Master Audit Senior per ${platform} in ${lang}. 
-        Sii critico. Se il video è noioso o troppo "standard", dimmelo e proponi una distorsione virale.
         Analisi tecnica 100 parole, Copywriting ipnotico 80 parole.` }
       ]
     }],
@@ -121,10 +120,6 @@ export async function analyzeVideo(
     }
   });
   
-  if (!response.text) {
-    throw new Error("L'IA non ha risposto. Riprova.");
-  }
-
   return { ...cleanAndParse(response.text), lang };
 }
 
@@ -145,14 +140,7 @@ export async function generateIdea(
     parts.push({ inlineData: { data: base64, mimeType: imageFile.type } });
   }
   
-  parts.push({ text: `GENERA UN'IDEA DIROMPENTE (Disruptive) per ${platform} in ${lang} basandoti su: "${prompt || 'Qualcosa di mai visto'}".
-  
-  SFIDA: L'utente potrebbe aver inserito un prompt scarno. Ignora la semplicità e crea un concept ELITARIO, fuori dagli schemi, anti-stock. 
-  Punta a:
-  1. Un titolo che obblighi al click (senza clickbait becero, ma con curiosità reale).
-  2. Una struttura visiva che rompa il feed.
-  3. Una strategia per trasformare le views in iscritti fedeli.
-  
+  parts.push({ text: `GENERA UN'IDEA DIROMPENTE per ${platform} in ${lang} basandoti su: "${prompt || 'Qualcosa di mai visto'}".
   MANDATORIO: Campo caption 80+ parole di puro copywriting persuasivo.` });
 
   const response = await ai.models.generateContent({
@@ -171,27 +159,22 @@ export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Lang
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Agisci come un Regista, Sound Designer e Montatore Senior. 
-    DEVI creare uno storyboard tecnico cinematografico che esegua fedelmente la seguente visione:
+    contents: [{ text: `Agisci come un Regista e Executive Producer Senior. 
+    PROGETTA lo storyboard tecnico basandoti sulla complessità della storia:
     
     TITOLO: "${analysis.title}"
-    CONCETTO: "${analysis.analysis}"
+    CONCETTO E STRATEGIA: "${analysis.analysis}"
     VISION: "${analysis.visualData}"
     
-    REGOLE MANDATORIE PER LO STORYBOARD:
-    1. QUANTITÀ: Devi generare MINIMO 8 e MASSIMO 12 scene. Se ne generi solo 5 verrai considerato un dilettante. Un Senior Master garantisce dinamismo con almeno 10 cambi di inquadratura o scena.
-    2. COERENZA: Ogni scena deve essere l'esecuzione visiva dell'idea "${analysis.title}". Non divagare.
-    3. STRUTTURA: 
-       - Scene 1-2: Hook visivo violento (Pattern Interrupt).
-       - Scene 3-5: Sviluppo e curiosità (Retention).
-       - Scene 6-8: Il cuore dell'idea (Value Bomb).
-       - Scene 9-10+: Chiusura virale e Call to Action distruttiva.
-    4. TECNICA: Usa angolazioni POV, Dutch Angle, Extreme Close Ups, e transizioni basate sul sound design.
+    REGOLE DI PRODUZIONE SENIOR:
+    1. NUMERO DI SCENE VARIABILE: Non usare un numero fisso. Determina quante scene servono (minimo 6, massimo 15) in base alla "Strategia d'Urto". Se l'idea è un gancio rapido, 6 scene bastano. Se è una narrazione complessa, espanditi fino a 15 per garantire che il messaggio arrivi con forza.
+    2. RITMO (PACING): Definisci un ritmo che serva la ritenzione. Scene veloci per l'inizio, respiri narrativi nel mezzo, climax visivo alla fine.
+    3. COERENZA TOTALE: Le scene devono essere l'incarnazione visiva esatta del titolo "${analysis.title}".
     
     REGOLE PER OGNI SCENA (Lingua: ${lang}):
-    - DESCRIZIONE VISIVA: Minimo 120 parole di estremo dettaglio su luci, movimenti camera, lenti e azioni.
-    - AUDIO/SFX: Minimo 80 parole su frequenze, foley, musica e impatto psicologico del suono.
-    - DURATA: Indica la durata precisa (es. 0.8s, 2.5s).` }],
+    - DESCRIZIONE VISIVA: Minimo 120 parole. Sii ossessivo sui dettagli: tipo di lente (es. 24mm wide), illuminazione (es. rim light ciano), movimenti (es. slider in), espressioni e dettagli scenici.
+    - AUDIO/SFX: Minimo 80 parole. Descrivi il sound design come un'arma psicologica (es. riser che si ferma bruscamente, foley iperealistico, bass drop).
+    - DURATA: Indica la durata ottimale per il montaggio.` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: {
