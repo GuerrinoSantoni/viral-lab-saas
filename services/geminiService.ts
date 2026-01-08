@@ -18,7 +18,7 @@ const ANALYSIS_SCHEMA = {
     hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
     visualData: { 
       type: Type.STRING, 
-      description: "Una roadmap numerata (es. 1. Hook, 2. Contrast...) di 5-10 punti che definisce l'ossatura del video." 
+      description: "Una roadmap numerata di 5-10 punti (es. 1. Hook Visivo...) che definisce l'ossatura del video." 
     },
     platformSuggestion: { type: Type.STRING },
     ideaDuration: { type: Type.STRING },
@@ -50,14 +50,14 @@ function cleanAndParse(text: string): any {
   }
 }
 
-const SYSTEM_PROMPT = `Sei un Senior Executive Producer Global con 20 anni di esperienza. 
-Il tuo marchio di fabbrica è la COERENZA MANIACALE tra strategia e produzione.
-Se decidi un titolo e una roadmap, lo storyboard deve essere l'esecuzione chirurgica di quella visione.
-Non divagare. Sii tecnico, brutale e prolisso (minimo 120 parole per ogni descrizione video e audio).`;
+const SYSTEM_PROMPT = `Sei un Senior Executive Producer Global. 
+Il tuo compito è la COERENZA CHIRURGICA. Se il video parla di 'Cucinare una Torta', lo storyboard NON può parlare di 'Riparare Auto'.
+Il titolo e la roadmap sono la tua UNICA fonte di verità.
+Sii brutale, tecnico e incredibilmente verboso (120+ parole per descrizione).`;
 
 export async function analyzeVideo(file: File, platform: Platform, lang: Language, onProgress?: (s: string) => void): Promise<AnalysisResult> {
   const ai = getAI();
-  onProgress?.("Scansione frame...");
+  onProgress?.("Analisi Senior...");
   
   const base64 = await new Promise<string>((resolve) => {
     const reader = new FileReader();
@@ -65,16 +65,13 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     reader.onload = () => resolve((reader.result as string).split(',')[1]);
   });
 
-  onProgress?.("Master Audit...");
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `Analisi Senior per ${platform} in ${lang}. 
-        Crea una strategia dirompente. 
-        In 'visualData', scrivi una ROADMAP NUMERATA (da 5 a 10 punti) che descriva l'andamento narrativo del video. 
-        Ogni punto deve essere un beat fondamentale.` }
+        { text: `Esegui un Master Audit per ${platform} in ${lang}. 
+        Crea un titolo potente e una ROADMAP NUMERATA (visualData) di 5-10 punti che descriva l'andamento del video.` }
       ]
     }],
     config: { 
@@ -89,8 +86,8 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
 
 export async function generateIdea(prompt: string, platform: Platform, lang: Language, imageFile?: File): Promise<AnalysisResult> {
   const ai = getAI();
-  const parts: any[] = [{ text: `Strategia Master per ${platform} in ${lang} su: ${prompt}. 
-  Obbligatorio: definisci in 'visualData' una ROADMAP NUMERATA di 5-10 punti narrativi precisi che serviranno per lo storyboard.` }];
+  const parts: any[] = [{ text: `Genera una strategia virale per ${platform} in ${lang} basata su: ${prompt}. 
+  Crea un Titolo e una Roadmap Numerata (visualData) di 5-10 punti precisi.` }];
   
   if (imageFile) {
     const base64 = await new Promise<string>((resolve) => {
@@ -117,21 +114,19 @@ export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Lang
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `ESEGUTIVO DI PRODUZIONE: Trasforma la seguente Roadmap nello Storyboard Tecnico per il video intitolato "${analysis.title}".
+    contents: [{ text: `ORDINE DI PRODUZIONE TASSATIVO: Trasforma la Roadmap Strategica nello Storyboard Esecutivo.
 
-L'ANALISI DI RIFERIMENTO È:
-${analysis.analysis}
-
-LA ROADMAP DA ESPANDERE È (Rispettala punto per punto):
+TITOLO DEL VIDEO (NON CAMBIARE SOGGETTO): "${analysis.title}"
+LOGICA NARRATIVA: "${analysis.analysis}"
+ROADMAP DA ESPANDERE:
 ${analysis.visualData}
 
-REGOLE TASSATIVE:
-1. Crea esattamente una scena per ogni punto della roadmap (minimo 5, massimo 10).
-2. Ogni scena deve chiamarsi come il punto corrispondente.
-3. VIDEO (Minimo 120 parole): Descrizione tecnica iper-dettagliata (lenti, luci, movimenti di macchina, color grading).
-4. AUDIO (Minimo 120 parole): Sound design, frequenze, foley e layering musicale.
-
-Sii coerente al 100% con il titolo "${analysis.title}" e con la strategia sopra descritta.` }],
+REGOLE PER LO STORYBOARD (JSON):
+1. Crea esattamente una scena per ogni punto della roadmap sopra elencata.
+2. La Scena 1 DEVE corrispondere al punto 1 della roadmap, la Scena 2 al punto 2, e così via.
+3. NON inventare una storia nuova. Devi solo descrivere TECNICAMENTE come filmare e sonorizzare i punti della roadmap per il video intitolato "${analysis.title}".
+4. VIDEO (120+ parole): Dettagli su lenti, angolazioni, luci (Kelvin), color correction, movimenti.
+5. AUDIO (120+ parole): Sound design, frequenze, layering, Foley, musica e psicologia acustica.` }],
     config: { 
       systemInstruction: SYSTEM_PROMPT,
       responseMimeType: "application/json",
@@ -145,7 +140,7 @@ export async function translateAnalysis(analysis: AnalysisResult, lang: Language
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Traduci in ${lang} mantenendo la roadmap numerata e lo stile senior: ${JSON.stringify(analysis)}` }],
+    contents: [{ text: `Traduci in ${lang}: ${JSON.stringify(analysis)}` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA
@@ -158,7 +153,7 @@ export async function translateScenes(scenes: Scene[], lang: Language): Promise<
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Traduci lo storyboard tecnico in ${lang}: ${JSON.stringify(scenes)}` }],
+    contents: [{ text: `Traduci lo storyboard in ${lang}: ${JSON.stringify(scenes)}` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: SCENE_SCHEMA
