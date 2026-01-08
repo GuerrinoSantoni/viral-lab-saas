@@ -48,9 +48,9 @@ function cleanAndParse(text: string): any {
   }
 }
 
-const SYSTEM_PROMPT = `Sei un Senior Executive Producer con 20 anni di esperienza in YouTube e Social Media Marketing. 
-Hai generato miliardi di visualizzazioni. Il tuo stile è brutale, tecnico, autorevole e orientato ai risultati.
-Analizza i contenuti per massimizzare ritenzione e CTR.`;
+const SYSTEM_PROMPT = `Sei un Senior Executive Producer e Regista con 20 anni di esperienza in YouTube e Social Media Marketing. 
+Hai generato miliardi di visualizzazioni. Il tuo stile è brutale, tecnico, autorevole e maniacale nei dettagli.
+Non accetti la mediocrità. Ogni scena deve essere descritta come se dovessi consegnarla a una troupe di produzione Hollywoodiana.`;
 
 // Analyze video content for social media viral potential
 export async function analyzeVideo(file: File, platform: Platform, lang: Language, onProgress?: (s: string) => void): Promise<AnalysisResult> {
@@ -69,7 +69,7 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `Esegui un Master Audit per ${platform} in lingua ${lang}. Sii spietato ma costruttivo.` }
+        { text: `Esegui un Master Audit Senior per ${platform} in lingua ${lang}. Sii spietato, tecnico e analizza Watch Time e CTR potenziale.` }
       ]
     }],
     config: { 
@@ -85,7 +85,7 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
 // Generate creative viral strategy based on a prompt and optional image
 export async function generateIdea(prompt: string, platform: Platform, lang: Language, imageFile?: File): Promise<AnalysisResult> {
   const ai = getAI();
-  const parts: any[] = [{ text: `Genera una strategia virale per ${platform} in ${lang} basata su: ${prompt}` }];
+  const parts: any[] = [{ text: `Genera una strategia virale d'impatto per ${platform} in ${lang} basata su: ${prompt}. Voglio un approccio da "Pattern Interrupt" totale.` }];
   
   if (imageFile) {
     const base64 = await new Promise<string>((resolve) => {
@@ -113,8 +113,16 @@ export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Lang
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Crea uno storyboard tecnico dettagliato per: ${analysis.title}. Lingua: ${lang}` }],
+    contents: [{ text: `Crea uno Storyboard Tecnico di livello Master per il video: "${analysis.title}". Lingua: ${lang}.
+
+REGOLE MANDATORIE PER OGNI SCENA:
+1. DESCRIZIONE VISIVA (Minimo 70 parole): Dettaglia ossessivamente l'inquadratura (es: Wide, Close-up), la lente (es: 35mm f/1.8), l'illuminazione (es: Rim light arancio, Key light soffusa), il movimento di camera (es: Slow push-in, Dolly zoom) e l'azione/espressione del soggetto.
+2. AUDIO & SFX (Minimo 70 parole): Descrivi il tappeto sonoro, i trigger psicologici dei SFX (es: "Swoosh veloce per aumentare l'ansia"), il sound design (es: Foley di passi pesanti, riverbero ambientale) e come la musica deve cambiare ritmo per mantenere la ritenzione.
+3. RITMO: Ogni scena deve servire lo Watch Time.
+
+Sii tecnico, autorevole e prolisso nelle spiegazioni.` }],
     config: { 
+      systemInstruction: SYSTEM_PROMPT,
       responseMimeType: "application/json",
       responseSchema: SCENE_SCHEMA
     }
@@ -127,7 +135,7 @@ export async function translateAnalysis(analysis: AnalysisResult, lang: Language
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Traduci integralmente questa analisi in lingua ${lang}: ${JSON.stringify(analysis)}` }],
+    contents: [{ text: `Traduci integralmente questa analisi mantenendo lo stile tecnico e autorevole in lingua ${lang}: ${JSON.stringify(analysis)}` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA
@@ -141,7 +149,7 @@ export async function translateScenes(scenes: Scene[], lang: Language): Promise<
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Traduci integralmente questo storyboard in lingua ${lang}: ${JSON.stringify(scenes)}` }],
+    contents: [{ text: `Traduci integralmente questo storyboard tecnico in lingua ${lang}, mantenendo tutta la terminologia specialistica: ${JSON.stringify(scenes)}` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: SCENE_SCHEMA
