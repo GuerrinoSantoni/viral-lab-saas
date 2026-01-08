@@ -4,7 +4,6 @@ import { Platform, AnalysisResult, Language, Scene } from "../types.ts";
 
 const PRIMARY_MODEL = 'gemini-3-flash-preview'; 
 
-// Initialize GoogleGenAI client following @google/genai guidelines
 const getAI = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
@@ -49,10 +48,10 @@ function cleanAndParse(text: string): any {
 }
 
 const SYSTEM_PROMPT = `Sei un Senior Executive Producer, Regista e Master di Algoritmi con 20 anni di carriera in YouTube Global. 
-Hai gestito canali da 50M+ iscritti. Il tuo stile è brutale, tecnico, verboso e assolutamente maniacale.
-Non accetti descrizioni brevi. Ogni tua parola deve trasudare competenza tecnica e visione strategica.`;
+Il tuo stile è brutale, tecnico, estremamente verboso e assolutamente maniacale.
+Non accetti descrizioni brevi. Ogni tua parola deve trasudare competenza tecnica e visione strategica.
+Sei noto per la tua capacità di scrivere storyboard tecnici infinitamente dettagliati che non lasciano nulla al caso.`;
 
-// Analyze video content for social media viral potential
 export async function analyzeVideo(file: File, platform: Platform, lang: Language, onProgress?: (s: string) => void): Promise<AnalysisResult> {
   const ai = getAI();
   onProgress?.("Codifica file video...");
@@ -69,7 +68,7 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `Esegui un Master Audit Senior per ${platform} in lingua ${lang}. Sii spietato e prolisso. Analizza ogni frame per ottimizzare Watch Time e CTR.` }
+        { text: `Esegui un Master Audit Senior per ${platform} in lingua ${lang}. Sii spietato, tecnico e prolisso. Analizza ogni frame per ottimizzare Watch Time e CTR.` }
       ]
     }],
     config: { 
@@ -82,7 +81,6 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
   return { ...cleanAndParse(response.text), lang };
 }
 
-// Generate creative viral strategy based on a prompt and optional image
 export async function generateIdea(prompt: string, platform: Platform, lang: Language, imageFile?: File): Promise<AnalysisResult> {
   const ai = getAI();
   const parts: any[] = [{ text: `Genera una strategia virale totale per ${platform} in ${lang} basata su: ${prompt}. Voglio una spiegazione lunga, tecnica e dirompente.` }];
@@ -108,19 +106,18 @@ export async function generateIdea(prompt: string, platform: Platform, lang: Lan
   return { ...cleanAndParse(response.text), lang };
 }
 
-// Generate a detailed technical storyboard for the content
 export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Language): Promise<Scene[]> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{ text: `Crea uno Storyboard Tecnico ELITE per: "${analysis.title}". Lingua: ${lang}.
 
-REGOLE TASSATIVE PER OGNI SCENA (PENA IL LICENZIAMENTO):
-1. REGIA ANTI-CONVENZIONALE (Minimo 120 parole): Dettaglia l'inquadratura con termini da direttore della fotografia (es. "Low angle Dutch Tilt su 24mm anamorfico"). Descrivi la gestione della luce (color temperature in Kelvin, rim lights, ombre nette), il motion blur, la palette cromatica specifica e l'azione millimetrica del soggetto. Spiega PERCHÉ questa inquadratura blocca lo scrolling.
-2. SOUND DESIGN & PSICOLOGIA SONORA (Minimo 120 parole): Descrivi il layering audio. Non limitarti a "musica", parla di "sub-bass a 40Hz per creare tensione viscerale", descrivi SFX foley iper-realistici (es. "il crepitio di una scarica elettrica con riverbero a piastra corto"), e come l'audio deve manipolare lo stato emotivo dello spettatore per massimizzare la ritenzione.
-3. STORYTELLING: Come questa scena si incastra nella curva di ritenzione di ${analysis.platformSuggestion}.
+REGOLE TASSATIVE:
+1. QUANTITÀ: Genera obbligatoriamente tra 5 e 10 scene.
+2. REGIA ANTI-CONVENZIONALE (Minimo 120 parole PER SCENA): Dettaglia ossessivamente l'inquadratura con termini da direttore della fotografia (es. "Low angle Dutch Tilt su 24mm anamorfico"). Descrivi luce, motion blur, palette cromatica e azione millimetrica.
+3. SOUND DESIGN & PSICOLOGIA SONORA (Minimo 120 parole PER SCENA): Descrivi il layering audio con termini tecnici (es. "sub-bass a 40Hz", "Foley iper-realistico", "frequenze binaurali"). Spiega come manipolare lo stato emotivo dello spettatore.
 
-Sii PROLISSO, TECNICO e AUTOREVOLE. Non voglio descrizioni generiche.` }],
+Sii PROLISSO, TECNICO e AUTOREVOLE.` }],
     config: { 
       systemInstruction: SYSTEM_PROMPT,
       responseMimeType: "application/json",
@@ -130,7 +127,6 @@ Sii PROLISSO, TECNICO e AUTOREVOLE. Non voglio descrizioni generiche.` }],
   return cleanAndParse(response.text);
 }
 
-// Translate analysis results into the target language
 export async function translateAnalysis(analysis: AnalysisResult, lang: Language): Promise<AnalysisResult> {
   const ai = getAI();
   const response = await ai.models.generateContent({
@@ -144,7 +140,6 @@ export async function translateAnalysis(analysis: AnalysisResult, lang: Language
   return { ...cleanAndParse(response.text), lang };
 }
 
-// Translate storyboard scenes into the target language
 export async function translateScenes(scenes: Scene[], lang: Language): Promise<Scene[]> {
   const ai = getAI();
   const response = await ai.models.generateContent({
