@@ -20,8 +20,25 @@ export default function App() {
   const [ideaFile, setIdeaFile] = useState<File | null>(null);
   const [showPricing, setShowPricing] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [masterClicks, setMasterClicks] = useState(0);
+  const [isMasterMode, setIsMasterMode] = useState(false);
   
   const t = TRANSLATIONS[lang] || TRANSLATIONS.IT;
+
+  const handleLogoClick = () => {
+    const newClicks = masterClicks + 1;
+    if (newClicks >= 5) {
+      setIsMasterMode(true);
+      setMasterClicks(0);
+      // Feedback temporaneo master mode
+      setStatus("MASTER MODE ACTIVATED");
+      setTimeout(() => setStatus(""), 3000);
+    } else {
+      setMasterClicks(newClicks);
+      // Reset counter dopo 2 secondi di inattività
+      setTimeout(() => setMasterClicks(0), 2000);
+    }
+  };
 
   const handleAnalyzeVideo = async (file: File) => {
     if (!platform) return alert(t.errorSelectPlatform);
@@ -52,21 +69,33 @@ export default function App() {
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center bg-[#000] text-white">
-      <nav className="w-full max-w-7xl glass px-6 py-4 rounded-[20px] flex justify-between items-center mb-12 shadow-2xl border border-white/5">
+      {/* Navbar con Logo cliccabile per Master Mode */}
+      <nav className="w-full max-w-7xl glass px-6 py-4 rounded-[20px] flex justify-between items-center mb-12 shadow-2xl border border-white/5 relative overflow-hidden">
+        {isMasterMode && (
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-[#a02a11] shadow-[0_0_15px_#a02a11] animate-pulse"></div>
+        )}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-black bg-[#a02a11] text-white shadow-[0_0_15px_rgba(160,42,17,0.3)] text-sm">SG</div>
-          <span className="font-bold text-[8px] uppercase tracking-[0.4em] hidden sm:block italic text-white/40">{t.tagline}</span>
+          <button 
+            onClick={handleLogoClick}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center font-black transition-all active:scale-95 ${isMasterMode ? 'bg-[#1087a0] shadow-[0_0_20px_#1087a0]' : 'bg-[#a02a11] shadow-[0_0_15px_rgba(160,42,17,0.3)]'} text-white text-sm`}
+          >
+            SG
+          </button>
+          <div className="flex flex-col">
+            <span className="font-bold text-[8px] uppercase tracking-[0.4em] italic text-white/40">{t.tagline}</span>
+            {isMasterMode && <span className="text-[6px] text-[#1087a0] font-black uppercase tracking-widest animate-pulse">UNLIMITED ACCESS ACTIVE</span>}
+          </div>
         </div>
 
         <div className="flex items-center gap-6">
-          <select value={lang} onChange={(e) => setLang(e.target.value as Language)} className="bg-white/5 text-[9px] font-black uppercase p-1.5 rounded-lg outline-none border border-white/10">
+          <select value={lang} onChange={(e) => setLang(e.target.value as Language)} className="bg-white/5 text-[9px] font-black uppercase p-1.5 rounded-lg outline-none border border-white/10 cursor-pointer hover:bg-white/10">
             <option value="IT">IT</option>
             <option value="EN">EN</option>
             <option value="FR">FR</option>
             <option value="DE">DE</option>
           </select>
-          <button onClick={() => setShowPricing(true)} className="bg-white text-black px-4 py-1.5 rounded-full font-black text-[8px] uppercase hover:bg-[#a02a11] hover:text-white transition-all tracking-widest">
-            {t.upgradeBtn}
+          <button onClick={() => setShowPricing(true)} className={`px-4 py-1.5 rounded-full font-black text-[8px] uppercase transition-all tracking-widest ${isMasterMode ? 'bg-[#1087a0] text-white' : 'bg-white text-black hover:bg-[#a02a11] hover:text-white'}`}>
+            {isMasterMode ? "MASTER PLAN" : t.upgradeBtn}
           </button>
         </div>
       </nav>
@@ -74,13 +103,13 @@ export default function App() {
       <main className="w-full max-w-5xl flex flex-col items-center">
         {!result && !loading && (
           <div className="w-full text-center space-y-12 animate-fadeIn">
-            <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">
+            <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter">
               {t.mainTitle}<span className="text-[#a02a11]">{t.mainTitleRed}</span>
             </h1>
 
             <div className="flex bg-white/5 p-1 rounded-2xl w-fit mx-auto border border-white/10">
-              <button onClick={() => setMode('VIDEO')} className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all ${mode === 'VIDEO' ? 'bg-[#a02a11] text-white' : 'text-gray-500'}`}>{t.modeVideo}</button>
-              <button onClick={() => setMode('IDEA')} className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all ${mode === 'IDEA' ? 'bg-[#a02a11] text-white' : 'text-gray-500'}`}>{t.modeIdea}</button>
+              <button onClick={() => setMode('VIDEO')} className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all ${mode === 'VIDEO' ? 'bg-[#a02a11] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>{t.modeVideo}</button>
+              <button onClick={() => setMode('IDEA')} className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all ${mode === 'IDEA' ? 'bg-[#a02a11] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>{t.modeIdea}</button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-2xl mx-auto">
@@ -95,16 +124,16 @@ export default function App() {
                   <div className="glass p-16 rounded-[40px] border-dashed border-2 border-white/10 flex flex-col items-center gap-6 hover:border-[#a02a11] transition-all group">
                     <div className="text-5xl group-hover:scale-110 transition-transform">🎞️</div>
                     <span className="text-lg font-black uppercase italic tracking-widest">{t.uploadLabel}</span>
-                    <p className="text-[8px] text-gray-500 uppercase font-black tracking-[0.3em]">Max 15MB</p>
+                    <p className="text-[8px] text-gray-500 uppercase font-black tracking-[0.3em]">Max 15MB • {isMasterMode ? "BYPASS SIZE: ACTIVE" : "LIMIT: ACTIVE"}</p>
                   </div>
                   <input type="file" className="hidden" accept="video/*" disabled={loading} onChange={e => e.target.files?.[0] && handleAnalyzeVideo(e.target.files[0])} />
                 </label>
               ) : (
                 <div className="glass p-10 rounded-[40px] space-y-6 border border-white/10">
-                  <textarea value={ideaText} onChange={(e) => setIdeaText(e.target.value)} placeholder={t.ideaPlaceholder} className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[120px] focus:border-[#a02a11]" />
+                  <textarea value={ideaText} onChange={(e) => setIdeaText(e.target.value)} placeholder={t.ideaPlaceholder} className="w-full bg-black/60 border border-white/10 rounded-2xl p-6 text-sm outline-none min-h-[120px] focus:border-[#a02a11] transition-all" />
                   <div className="flex flex-col md:flex-row gap-4">
                     <label className="flex-1 cursor-pointer">
-                      <div className="h-full min-h-[80px] border border-dashed border-white/10 rounded-2xl flex items-center justify-center text-[9px] font-black uppercase text-gray-500 hover:border-[#1087a0] transition-all tracking-widest">
+                      <div className="h-full min-h-[80px] border border-dashed border-white/10 rounded-2xl flex items-center justify-center text-[9px] font-black uppercase text-gray-500 hover:border-[#1087a0] hover:text-[#1087a0] transition-all tracking-widest px-4 text-center">
                         {ideaFile ? ideaFile.name : t.imageUploadLabel}
                       </div>
                       <input type="file" className="hidden" accept="image/*" onChange={(e) => e.target.files?.[0] && setIdeaFile(e.target.files[0])} />
@@ -122,8 +151,12 @@ export default function App() {
             <div className="relative">
               <div className="w-20 h-20 border-2 border-[#a02a11]/20 rounded-full"></div>
               <div className="absolute top-0 w-20 h-20 border-2 border-[#a02a11] border-t-transparent rounded-full animate-spin"></div>
+              {isMasterMode && <div className="absolute inset-0 border border-[#1087a0] rounded-full animate-ping opacity-20"></div>}
             </div>
-            <p className="text-3xl font-black uppercase italic tracking-tighter text-gradient">{status}</p>
+            <div className="space-y-2">
+              <p className="text-3xl font-black uppercase italic tracking-tighter text-gradient">{status || t.processing}</p>
+              {isMasterMode && <p className="text-[8px] font-black text-[#1087a0] tracking-[0.5em]">PRIORITY MASTER BYPASS ENABLED</p>}
+            </div>
           </div>
         )}
 
