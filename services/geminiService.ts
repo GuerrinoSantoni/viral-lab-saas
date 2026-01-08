@@ -48,9 +48,9 @@ function cleanAndParse(text: string): any {
   }
 }
 
-const SYSTEM_PROMPT = `Sei un Senior Executive Producer e Regista con 20 anni di esperienza in YouTube e Social Media Marketing. 
-Hai generato miliardi di visualizzazioni. Il tuo stile è brutale, tecnico, autorevole e maniacale nei dettagli.
-Non accetti la mediocrità. Ogni scena deve essere descritta come se dovessi consegnarla a una troupe di produzione Hollywoodiana.`;
+const SYSTEM_PROMPT = `Sei un Senior Executive Producer, Regista e Master di Algoritmi con 20 anni di carriera in YouTube Global. 
+Hai gestito canali da 50M+ iscritti. Il tuo stile è brutale, tecnico, verboso e assolutamente maniacale.
+Non accetti descrizioni brevi. Ogni tua parola deve trasudare competenza tecnica e visione strategica.`;
 
 // Analyze video content for social media viral potential
 export async function analyzeVideo(file: File, platform: Platform, lang: Language, onProgress?: (s: string) => void): Promise<AnalysisResult> {
@@ -69,7 +69,7 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `Esegui un Master Audit Senior per ${platform} in lingua ${lang}. Sii spietato, tecnico e analizza Watch Time e CTR potenziale.` }
+        { text: `Esegui un Master Audit Senior per ${platform} in lingua ${lang}. Sii spietato e prolisso. Analizza ogni frame per ottimizzare Watch Time e CTR.` }
       ]
     }],
     config: { 
@@ -85,7 +85,7 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
 // Generate creative viral strategy based on a prompt and optional image
 export async function generateIdea(prompt: string, platform: Platform, lang: Language, imageFile?: File): Promise<AnalysisResult> {
   const ai = getAI();
-  const parts: any[] = [{ text: `Genera una strategia virale d'impatto per ${platform} in ${lang} basata su: ${prompt}. Voglio un approccio da "Pattern Interrupt" totale.` }];
+  const parts: any[] = [{ text: `Genera una strategia virale totale per ${platform} in ${lang} basata su: ${prompt}. Voglio una spiegazione lunga, tecnica e dirompente.` }];
   
   if (imageFile) {
     const base64 = await new Promise<string>((resolve) => {
@@ -113,14 +113,14 @@ export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Lang
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Crea uno Storyboard Tecnico di livello Master per il video: "${analysis.title}". Lingua: ${lang}.
+    contents: [{ text: `Crea uno Storyboard Tecnico ELITE per: "${analysis.title}". Lingua: ${lang}.
 
-REGOLE MANDATORIE PER OGNI SCENA:
-1. DESCRIZIONE VISIVA (Minimo 70 parole): Dettaglia ossessivamente l'inquadratura (es: Wide, Close-up), la lente (es: 35mm f/1.8), l'illuminazione (es: Rim light arancio, Key light soffusa), il movimento di camera (es: Slow push-in, Dolly zoom) e l'azione/espressione del soggetto.
-2. AUDIO & SFX (Minimo 70 parole): Descrivi il tappeto sonoro, i trigger psicologici dei SFX (es: "Swoosh veloce per aumentare l'ansia"), il sound design (es: Foley di passi pesanti, riverbero ambientale) e come la musica deve cambiare ritmo per mantenere la ritenzione.
-3. RITMO: Ogni scena deve servire lo Watch Time.
+REGOLE TASSATIVE PER OGNI SCENA (PENA IL LICENZIAMENTO):
+1. REGIA ANTI-CONVENZIONALE (Minimo 120 parole): Dettaglia l'inquadratura con termini da direttore della fotografia (es. "Low angle Dutch Tilt su 24mm anamorfico"). Descrivi la gestione della luce (color temperature in Kelvin, rim lights, ombre nette), il motion blur, la palette cromatica specifica e l'azione millimetrica del soggetto. Spiega PERCHÉ questa inquadratura blocca lo scrolling.
+2. SOUND DESIGN & PSICOLOGIA SONORA (Minimo 120 parole): Descrivi il layering audio. Non limitarti a "musica", parla di "sub-bass a 40Hz per creare tensione viscerale", descrivi SFX foley iper-realistici (es. "il crepitio di una scarica elettrica con riverbero a piastra corto"), e come l'audio deve manipolare lo stato emotivo dello spettatore per massimizzare la ritenzione.
+3. STORYTELLING: Come questa scena si incastra nella curva di ritenzione di ${analysis.platformSuggestion}.
 
-Sii tecnico, autorevole e prolisso nelle spiegazioni.` }],
+Sii PROLISSO, TECNICO e AUTOREVOLE. Non voglio descrizioni generiche.` }],
     config: { 
       systemInstruction: SYSTEM_PROMPT,
       responseMimeType: "application/json",
@@ -135,7 +135,7 @@ export async function translateAnalysis(analysis: AnalysisResult, lang: Language
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Traduci integralmente questa analisi mantenendo lo stile tecnico e autorevole in lingua ${lang}: ${JSON.stringify(analysis)}` }],
+    contents: [{ text: `Traduci questa analisi Master in ${lang}, preservando tutta la terminologia tecnica e lo stile prolisso: ${JSON.stringify(analysis)}` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA
@@ -149,7 +149,7 @@ export async function translateScenes(scenes: Scene[], lang: Language): Promise<
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Traduci integralmente questo storyboard tecnico in lingua ${lang}, mantenendo tutta la terminologia specialistica: ${JSON.stringify(scenes)}` }],
+    contents: [{ text: `Traduci questo storyboard tecnico in ${lang}. Ogni descrizione deve rimanere estremamente dettagliata e lunga: ${JSON.stringify(scenes)}` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: SCENE_SCHEMA
