@@ -114,10 +114,10 @@ export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Lang
 
 REGOLE TASSATIVE:
 1. QUANTITÀ: Genera obbligatoriamente tra 5 e 10 scene.
-2. REGIA ANTI-CONVENZIONALE (Minimo 120 parole PER SCENA): Dettaglia ossessivamente l'inquadratura con termini da direttore della fotografia (es. "Low angle Dutch Tilt su 24mm anamorfico"). Descrivi luce, motion blur, palette cromatica e azione millimetrica.
+2. REGIA ANTI-CONVENZIONALE (Minimo 120 parole PER SCENA): Dettaglia ossessivamente l'inquadratura con termini da direttore della fotografia (es. "Low angle Dutch Tilt su 24mm anamorfico"). Descrivi luce (Kelvin, ombre), motion blur, palette cromatica e azione millimetrica.
 3. SOUND DESIGN & PSICOLOGIA SONORA (Minimo 120 parole PER SCENA): Descrivi il layering audio con termini tecnici (es. "sub-bass a 40Hz", "Foley iper-realistico", "frequenze binaurali"). Spiega come manipolare lo stato emotivo dello spettatore.
 
-Sii PROLISSO, TECNICO e AUTOREVOLE.` }],
+Ogni singola scena deve essere un capolavoro di dettagli.` }],
     config: { 
       systemInstruction: SYSTEM_PROMPT,
       responseMimeType: "application/json",
