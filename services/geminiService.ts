@@ -16,7 +16,10 @@ const ANALYSIS_SCHEMA = {
     analysis: { type: Type.STRING },
     caption: { type: Type.STRING },
     hashtags: { type: Type.ARRAY, items: { type: Type.STRING } },
-    visualData: { type: Type.STRING },
+    visualData: { 
+      type: Type.STRING, 
+      description: "Una roadmap numerata (es. 1. Hook, 2. Contrast...) di 5-10 punti che definisce l'ossatura del video." 
+    },
     platformSuggestion: { type: Type.STRING },
     ideaDuration: { type: Type.STRING },
   },
@@ -47,14 +50,14 @@ function cleanAndParse(text: string): any {
   }
 }
 
-const SYSTEM_PROMPT = `Sei un Senior Executive Producer, Regista e Master di Algoritmi con 20 anni di carriera in YouTube Global. 
-Il tuo stile è brutale, tecnico, estremamente verboso e assolutamente maniacale.
-Non accetti descrizioni brevi. Ogni tua parola deve trasudare competenza tecnica e visione strategica.
-Sei noto per la tua capacità di scrivere storyboard tecnici infinitamente dettagliati che non lasciano nulla al caso.`;
+const SYSTEM_PROMPT = `Sei un Senior Executive Producer Global con 20 anni di esperienza. 
+Il tuo marchio di fabbrica è la COERENZA MANIACALE tra strategia e produzione.
+Se decidi un titolo e una roadmap, lo storyboard deve essere l'esecuzione chirurgica di quella visione.
+Non divagare. Sii tecnico, brutale e prolisso (minimo 120 parole per ogni descrizione video e audio).`;
 
 export async function analyzeVideo(file: File, platform: Platform, lang: Language, onProgress?: (s: string) => void): Promise<AnalysisResult> {
   const ai = getAI();
-  onProgress?.("Codifica file video...");
+  onProgress?.("Scansione frame...");
   
   const base64 = await new Promise<string>((resolve) => {
     const reader = new FileReader();
@@ -62,13 +65,16 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
     reader.onload = () => resolve((reader.result as string).split(',')[1]);
   });
 
-  onProgress?.("Analisi Senior in corso...");
+  onProgress?.("Master Audit...");
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
     contents: [{
       parts: [
         { inlineData: { data: base64, mimeType: file.type || "video/mp4" } },
-        { text: `Esegui un Master Audit Senior per ${platform} in lingua ${lang}. Sii spietato, tecnico e prolisso. Analizza ogni frame per ottimizzare Watch Time e CTR.` }
+        { text: `Analisi Senior per ${platform} in ${lang}. 
+        Crea una strategia dirompente. 
+        In 'visualData', scrivi una ROADMAP NUMERATA (da 5 a 10 punti) che descriva l'andamento narrativo del video. 
+        Ogni punto deve essere un beat fondamentale.` }
       ]
     }],
     config: { 
@@ -83,7 +89,8 @@ export async function analyzeVideo(file: File, platform: Platform, lang: Languag
 
 export async function generateIdea(prompt: string, platform: Platform, lang: Language, imageFile?: File): Promise<AnalysisResult> {
   const ai = getAI();
-  const parts: any[] = [{ text: `Genera una strategia virale totale per ${platform} in ${lang} basata su: ${prompt}. Voglio una spiegazione lunga, tecnica e dirompente.` }];
+  const parts: any[] = [{ text: `Strategia Master per ${platform} in ${lang} su: ${prompt}. 
+  Obbligatorio: definisci in 'visualData' una ROADMAP NUMERATA di 5-10 punti narrativi precisi che serviranno per lo storyboard.` }];
   
   if (imageFile) {
     const base64 = await new Promise<string>((resolve) => {
@@ -110,14 +117,21 @@ export async function generateSceneAnalysis(analysis: AnalysisResult, lang: Lang
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Crea uno Storyboard Tecnico ELITE per: "${analysis.title}". Lingua: ${lang}.
+    contents: [{ text: `ESEGUTIVO DI PRODUZIONE: Trasforma la seguente Roadmap nello Storyboard Tecnico per il video intitolato "${analysis.title}".
+
+L'ANALISI DI RIFERIMENTO È:
+${analysis.analysis}
+
+LA ROADMAP DA ESPANDERE È (Rispettala punto per punto):
+${analysis.visualData}
 
 REGOLE TASSATIVE:
-1. QUANTITÀ: Genera obbligatoriamente tra 5 e 10 scene.
-2. REGIA ANTI-CONVENZIONALE (Minimo 120 parole PER SCENA): Dettaglia ossessivamente l'inquadratura con termini da direttore della fotografia (es. "Low angle Dutch Tilt su 24mm anamorfico"). Descrivi luce (Kelvin, ombre), motion blur, palette cromatica e azione millimetrica.
-3. SOUND DESIGN & PSICOLOGIA SONORA (Minimo 120 parole PER SCENA): Descrivi il layering audio con termini tecnici (es. "sub-bass a 40Hz", "Foley iper-realistico", "frequenze binaurali"). Spiega come manipolare lo stato emotivo dello spettatore.
+1. Crea esattamente una scena per ogni punto della roadmap (minimo 5, massimo 10).
+2. Ogni scena deve chiamarsi come il punto corrispondente.
+3. VIDEO (Minimo 120 parole): Descrizione tecnica iper-dettagliata (lenti, luci, movimenti di macchina, color grading).
+4. AUDIO (Minimo 120 parole): Sound design, frequenze, foley e layering musicale.
 
-Ogni singola scena deve essere un capolavoro di dettagli.` }],
+Sii coerente al 100% con il titolo "${analysis.title}" e con la strategia sopra descritta.` }],
     config: { 
       systemInstruction: SYSTEM_PROMPT,
       responseMimeType: "application/json",
@@ -131,7 +145,7 @@ export async function translateAnalysis(analysis: AnalysisResult, lang: Language
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Traduci questa analisi Master in ${lang}, preservando tutta la terminologia tecnica e lo stile prolisso: ${JSON.stringify(analysis)}` }],
+    contents: [{ text: `Traduci in ${lang} mantenendo la roadmap numerata e lo stile senior: ${JSON.stringify(analysis)}` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA
@@ -144,7 +158,7 @@ export async function translateScenes(scenes: Scene[], lang: Language): Promise<
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: PRIMARY_MODEL,
-    contents: [{ text: `Traduci questo storyboard tecnico in ${lang}. Ogni descrizione deve rimanere estremamente dettagliata e lunga: ${JSON.stringify(scenes)}` }],
+    contents: [{ text: `Traduci lo storyboard tecnico in ${lang}: ${JSON.stringify(scenes)}` }],
     config: { 
       responseMimeType: "application/json",
       responseSchema: SCENE_SCHEMA
